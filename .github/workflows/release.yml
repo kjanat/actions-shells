@@ -18,59 +18,53 @@ on:
         type: boolean
         default: false
 
-permissions:
-  contents: write
-  id-token: write
-  attestations: write
-
-concurrency:
-  group: release
-  cancel-in-progress: false
+permissions: { contents: write, id-token: write, attestations: write }
+concurrency: { group: release, cancel-in-progress: false }
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-        with:
-          ref: master
-          fetch-depth: 0
-
+      - parallel:
+          - uses: actions/checkout@v7
+            with: { ref: master, fetch-depth: 0 }
+          - uses: actions/setup-node@v7
+            with: { node-version: 24, package-manager-cache: false }
+          - uses: kjanat/runner@master
       - name: Validate version
         id: v
-        env:
-          VERSION: ${{ inputs.version }}
+        env: { VERSION: "${{ inputs.version }}", PRERELEASE: "${{ inputs.prerelease }}" }
         run: |
           set -euo pipefail
-          [[ "$VERSION" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(-[0-9A-Za-z.-]+)?$ ]] || { echo "invalid version: $VERSION"; exit 1; }
-          if git ls-remote --exit-code --tags origin "refs/tags/v$VERSION" >/dev/null; then
-            echo "tag v$VERSION already exists — release tags are immutable"; exit 1
+          [[ "${VERSION}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(-[0-9A-Za-z.-]+)?$ ]] || { echo "invalid version: ${VERSION}"; exit 1; }
+          if git ls-remote --exit-code --tags origin "refs/tags/v${VERSION}" >/dev/null; then
+            echo "tag v${VERSION} already exists — release tags are immutable"; exit 1
           fi
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "major=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
-          echo "minor=${BASH_REMATCH[2]}" >> "$GITHUB_OUTPUT"
-          echo "prerelease=$([[ -n "${BASH_REMATCH[4]:-}" || "${{ inputs.prerelease }}" == "true" ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          [[ -n "${BASH_REMATCH[4]:-}" || "${PRERELEASE}" == "true" ]] && PRERELEASE=true || PRERELEASE=false
+          export PRERELEASE
+          {
+            echo "version=${VERSION}"
+            echo "major=${BASH_REMATCH[1]}"
+            echo "minor=${BASH_REMATCH[2]}"
+            echo "prerelease=${PRERELEASE}"
+          } >> "${GITHUB_OUTPUT}"
+          echo "ACTIONS_SHELL_VERSION=${VERSION}" >> "${GITHUB_ENV}"
 
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm lint && pnpm typecheck
-      - run: pnpm build
-        env:
-          ACTIONS_SHELL_VERSION: ${{ steps.v.outputs.version }}
-      - run: pnpm test:unit
-      - run: pnpm vitest run test/integration
-      - run: node scripts/assemble-release.mjs release
+      - uses: pnpm/action-setup@v6
+      - run: runner i -pf lint typecheck
+      - run: run build
+        env: { ACTIONS_SHELL_VERSION: "${{ steps.v.outputs.version }}" }
+      - parallel:
+          - run: run test:unit
+          - run: run vitest run test/integration
+      - run: run scripts/assemble-release.ts release
 
       - name: Checksums
         working-directory: release
         run: sha256sum cli.js setup.js action.yml > SHA256SUMS && cat SHA256SUMS
 
       - name: Attest build provenance
-        uses: actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: |
             release/cli.js
@@ -90,32 +84,33 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           # Build a tree from release/ only, using a throwaway index so master's tree is untouched.
-          export GIT_INDEX_FILE="$(mktemp)"
+          GIT_INDEX_FILE="$(mktemp)"
+          export GIT_INDEX_FILE
           git --work-tree=release add -A
           TREE="$(git write-tree)"
           unset GIT_INDEX_FILE
 
-          COMMIT="$(git commit-tree "$TREE" -m "actions-shells v$VERSION" -m "Built from $(git rev-parse HEAD) on master.")"
-          git tag -a "v$VERSION" -m "actions-shells v$VERSION" "$COMMIT"
-          git push origin "refs/tags/v$VERSION"
+          HEAD="$(git rev-parse HEAD)"
+          COMMIT="$(git commit-tree "${TREE}" -m "actions-shells v${VERSION}" -m "Built from ${HEAD} on master.")"
+          git tag -a "v${VERSION}" -m "actions-shells v${VERSION}" "${COMMIT}"
+          git push origin "refs/tags/v${VERSION}"
 
-          if [[ "$PRERELEASE" != "true" ]]; then
-            git tag -f -a "v$MAJOR.$MINOR" -m "actions-shells v$MAJOR.$MINOR -> v$VERSION" "$COMMIT"
-            git tag -f -a "v$MAJOR" -m "actions-shells v$MAJOR -> v$VERSION" "$COMMIT"
-            git push --force origin "refs/tags/v$MAJOR.$MINOR" "refs/tags/v$MAJOR"
+          if [[ "${PRERELEASE}" != "true" ]]; then
+            git tag -f -a "v${MAJOR}.${MINOR}" -m "actions-shells v${MAJOR}.${MINOR} -> v${VERSION}" "${COMMIT}"
+            git tag -f -a "v${MAJOR}" -m "actions-shells v${MAJOR} -> v${VERSION}" "${COMMIT}"
+            git push --force origin "refs/tags/v${MAJOR}.${MINOR}" "refs/tags/v${MAJOR}"
           fi
-          echo "commit=$COMMIT" >> "$GITHUB_OUTPUT"
+          echo "commit=${COMMIT}" >> "${GITHUB_OUTPUT}"
 
       - name: Package
-        env:
-          VERSION: ${{ steps.v.outputs.version }}
+        env: { VERSION: "${{ steps.v.outputs.version }}" }
         run: |
           set -euo pipefail
-          tar -C release -czf "actions-shells-v$VERSION.tgz" README.md LICENSE action.yml cli.js setup.js
+          tar -C release -czf "actions-shells-v${VERSION}.tgz" README.md LICENSE action.yml cli.js setup.js
           cp release/SHA256SUMS release/cli.js release/setup.js .
 
       - name: GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{ steps.v.outputs.version }}
           name: v${{ steps.v.outputs.version }}

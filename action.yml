@@ -1,9 +1,7 @@
 name: Actions Shells
-description: "More shells for `run:` — use Rust, Go, Deno, Bun, Kotlin, Swift, C#, and more as `shell:` in GitHub Actions steps"
+description: "More shells for 'run:' — use Rust, Go, Deno, Bun, Kotlin, Swift, C#, and more as 'shell:' in GitHub Actions steps"
 author: Kaj Kowalski
-branding:
-  icon: terminal
-  color: gray-dark
+branding: { icon: terminal, color: gray-dark }
 
 inputs:
   doctor:
@@ -18,13 +16,8 @@ inputs:
     default: ""
 
 outputs:
-  bin-dir:
-    description: Directory containing the `actions-shell` shim (already added to PATH)
-  cli:
-    description: Absolute path to the bundled cli.js
-  version:
-    description: Installed actions-shell version
+  bin-dir: { description: Directory containing the 'actions-shell' shim (already added to PATH) }
+  cli: { description: Absolute path to the bundled cli.js }
+  version: { description: Installed actions-shell version }
 
-runs:
-  using: node24
-  main: setup.js
+runs: [{ using: node24 }, { main: setup.js }]

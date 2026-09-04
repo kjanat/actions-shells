@@ -1,40 +1,56 @@
 {
-  "name": "actions-shells",
-  "version": "0.1.0",
-  "private": true,
-  "description": "More shells for `run:` — additional executable languages for GitHub Actions steps",
-  "license": "MIT",
-  "author": "Kaj Kowalski",
-  "repository": "github:kjanat/actions-shells",
-  "engines": {
-    "node": ">=20"
-  },
-  "packageManager": "pnpm@10.33.0",
-  "scripts": {
-    "build": "node scripts/build.mjs",
-    "typecheck": "tsc --noEmit",
-    "lint": "biome check .",
-    "lint:fix": "biome check --write .",
-    "test": "vitest run",
-    "test:unit": "vitest run test/unit",
-    "test:integration": "pnpm build && vitest run test/integration",
-    "release:assemble": "pnpm build && node scripts/assemble-release.mjs",
-    "check": "pnpm lint && pnpm typecheck && pnpm build && pnpm test"
-  },
-  "dependencies": {
-    "@actions/core": "^3.0.1"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "^2.5.12",
-    "@types/node": "^24.0.0",
-    "esbuild": "^0.28.2",
-    "typescript": "^7.0.2",
-    "vitest": "^5.0.0"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@biomejs/biome",
-      "esbuild"
-    ]
-  }
+	"name": "actions-shells",
+	"version": "0.1.0",
+	"private": true,
+	"description": "More shells for 'run:'. Additional executable languages for GitHub Actions steps",
+	"repository": "https://github.com/kjanat/actions-shells",
+	"license": "MIT",
+	"author": "Kaj Kowalski",
+	"type": "module",
+	"imports": {
+		"#*": "./src/*.ts",
+		"#runtimes": "./src/runtimes/index.ts",
+		"#pkg": "./package.json"
+	},
+	"scripts": {
+		"build": "node scripts/build.ts",
+		"check": "run -s lint typecheck build test",
+		"format": "dprint fmt",
+		"lint": "biome check .",
+		"lint:fix": "biome check --write .",
+		"release:assemble": "pnpm build && node scripts/assemble-release.ts",
+		"test": "vitest run",
+		"test:integration": "run -s build test:integration:run",
+		"test:integration:run": "vitest run test/integration",
+		"test:unit": "vitest run test/unit",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@actions/core": "^3"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.5",
+		"@types/node": "^24",
+		"dprint": "^0.57",
+		"esbuild": "^0.28",
+		"runner-run": "^0.25",
+		"typescript": "^7",
+		"vitest": "^5"
+	},
+	"engines": {
+		"node": "^24"
+	},
+	"devEngines": {
+		"runtime": {
+			"name": "node",
+			"version": "24"
+		},
+		"packageManager": {
+			"name": "pnpm",
+			"version": "11.25.0"
+		}
+	},
+	"volta": {
+		"node": "24.20.0"
+	}
 }
