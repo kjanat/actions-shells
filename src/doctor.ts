@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { resolveCommand } from "./run.js";
+import { planSpawn } from "./spawn-args.js";
 import type { RuntimeAdapter } from "./types.js";
 
 export type DoctorStatus = "ready" | "missing" | "version-check-failed";
@@ -31,11 +32,13 @@ export function doctor(
   const base = { runtime: adapter.name, command, resolved, input, extension };
   if (!resolved) return { ...base, version: undefined, status: "missing" };
 
-  const probe = spawnSync(resolved, [...extraArgs, ...(adapter.versionArgs ?? ["--version"])], {
+  const plan = planSpawn(resolved, [...extraArgs, ...(adapter.versionArgs ?? ["--version"])]);
+  const probe = spawnSync(plan.file, plan.args, {
     encoding: "utf8",
     env,
     timeout: 60_000,
     windowsHide: true,
+    windowsVerbatimArguments: plan.windowsVerbatimArguments,
   });
   const text = `${probe.stdout ?? ""}\n${probe.stderr ?? ""}`.trim();
   const firstLine = text

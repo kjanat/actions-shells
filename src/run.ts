@@ -3,6 +3,7 @@ import { openSync, rmSync } from "node:fs";
 import os from "node:os";
 import { cleanupSource, type PreparedSource, prepareSource } from "./prepare.js";
 import { applyEnvOverrides } from "./registry.js";
+import { planSpawn } from "./spawn-args.js";
 import type { RuntimeAdapter } from "./types.js";
 import { which } from "./which.js";
 
@@ -115,10 +116,12 @@ function spawnStage(stage: Stage, o: SpawnStageOptions): Promise<number> {
     process.stderr.write(`actions-shell: ${[executable, ...args].map(quote).join(" ")}\n`);
   }
   return new Promise<number>((resolve) => {
-    const child = spawn(executable, args, {
+    const plan = planSpawn(executable, args);
+    const child = spawn(plan.file, plan.args, {
       stdio: [o.stdin, "inherit", "inherit"],
       env: o.env,
       windowsHide: true,
+      windowsVerbatimArguments: plan.windowsVerbatimArguments,
     });
 
     const forward = (signal: NodeJS.Signals) => () => {

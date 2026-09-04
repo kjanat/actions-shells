@@ -3,6 +3,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "no
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { planSpawn } from "../../src/spawn-args.js";
 
 const SETUP = path.resolve(__dirname, "../../setup.js");
 
@@ -39,10 +40,11 @@ describe("setup action", () => {
         binDir,
         process.platform === "win32" ? "actions-shell.cmd" : "actions-shell",
       );
-      const s = spawnSync(shim, ["node", script], {
+      const plan = planSpawn(shim, ["node", script]);
+      const s = spawnSync(plan.file, plan.args, {
         encoding: "utf8",
         windowsHide: true,
-        shell: process.platform === "win32",
+        windowsVerbatimArguments: plan.windowsVerbatimArguments,
       });
       expect(s.stdout.trim(), s.stderr).toBe("via shim");
       expect(s.status).toBe(0);
