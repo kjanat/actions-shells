@@ -1,0 +1,269 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: lint · typecheck · unit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm build
+      - run: pnpm test:unit
+      - name: release tree contains exactly five files
+        run: pnpm release:assemble
+
+  e2e:
+    name: e2e (${{ matrix.os }})
+    needs: check
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+      # ---- runtimes (this action does not install any of these on purpose)
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@nightly
+      - run: rustup default stable
+        shell: bash
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cache/rust-script
+            ~/Library/Caches/rust-script
+            ~\AppData\Local\rust-script
+          key: rust-script-${{ runner.os }}-${{ hashFiles('.github/workflows/ci.yml') }}
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: rust-script
+      - uses: actions/setup-go@v6
+        with:
+          go-version: stable
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: "1"
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+      - uses: leafo/gh-actions-lua@v11
+        if: runner.os != 'Windows'
+      - uses: fwilhe2/setup-kotlin@main
+      - uses: swift-actions/setup-swift@v2
+        if: runner.os == 'Linux'
+      - uses: shogo82148/actions-setup-perl@v1
+        with:
+          perl-version: "5.40"
+
+      # ---- integration tests spawn cli.js against every runtime found on PATH
+      - run: pnpm vitest run test/integration
+        shell: bash
+
+      # ---- the real thing: use the action from this checkout, then `shell:` steps
+      - uses: ./
+        with:
+          doctor: true
+
+      - name: rust-script
+        shell: actions-shell rust-script {0}
+        run: |
+          println!("Ferris has entered CI on {}", std::env::consts::OS);
+
+      - name: rust-script with embedded cargo manifest
+        shell: actions-shell rust {0}
+        run: |
+          //! ```cargo
+          //! [dependencies]
+          //! serde_json = "1"
+          //! ```
+          let value: serde_json::Value = serde_json::from_str(r#"{"hello":"world"}"#).unwrap();
+          println!("{value}");
+
+      - name: cargo -Zscript
+        shell: actions-shell cargo-script {0}
+        run: |
+          fn main() {
+              println!("cargo script says hi");
+          }
+
+      - name: go
+        shell: actions-shell go {0}
+        run: |
+          package main
+
+          import (
+              "fmt"
+              "os"
+          )
+
+          func main() {
+              fmt.Println("go says hi from", os.Getenv("RUNNER_OS"))
+          }
+
+      - name: deno
+        shell: actions-shell deno {0}
+        run: |
+          const sha: string = Deno.env.get("GITHUB_SHA") ?? "";
+          console.log("deno", Deno.version.deno, sha.slice(0, 7));
+
+      - name: bun
+        shell: actions-shell bun {0}
+        run: |
+          const n: number = 42;
+          console.log("bun", Bun.version, n);
+
+      - name: node
+        shell: actions-shell node {0}
+        run: |
+          console.log("node", process.version, process.env.GITHUB_REPOSITORY);
+
+      - name: csharp
+        shell: actions-shell csharp {0}
+        run: |
+          Console.WriteLine($"C# on {Environment.OSVersion.Platform}");
+
+      - name: fsharp
+        shell: actions-shell fsharp {0}
+        run: |
+          printfn "F# says hi"
+
+      - name: kotlin
+        shell: actions-shell kotlin {0}
+        run: |
+          println("kotlin says hi from ${System.getenv("RUNNER_OS")}")
+
+      - name: swift
+        if: runner.os != 'Windows'
+        shell: actions-shell swift {0}
+        run: |
+          print("swift says hi")
+
+      - name: python
+        shell: actions-shell python {0}
+        run: |
+          import sys
+          print("python", sys.version.split()[0])
+
+      - name: ruby
+        shell: actions-shell ruby {0}
+        run: |
+          puts "ruby #{RUBY_VERSION}"
+
+      - name: perl
+        shell: actions-shell perl {0}
+        run: |
+          print "perl $^V\n";
+
+      - name: php
+        shell: actions-shell php {0}
+        run: |
+          <?php echo "php " . PHP_VERSION . "\n";
+
+      - name: lua
+        if: runner.os != 'Windows'
+        shell: actions-shell lua {0}
+        run: |
+          print("lua " .. _VERSION)
+
+      - name: julia
+        shell: actions-shell julia {0}
+        run: |
+          println("julia ", VERSION)
+
+      - name: r
+        shell: actions-shell r {0}
+        run: |
+          cat("R", R.version.string, "\n")
+
+      - name: runtime args before {0}
+        shell: actions-shell deno --no-check {0}
+        run: |
+          console.log("deno --no-check works");
+
+      - name: exit codes propagate
+        id: fail
+        continue-on-error: true
+        shell: actions-shell go {0}
+        run: |
+          package main
+          import "os"
+          func main() { os.Exit(3) }
+
+      - name: assert the previous step failed
+        shell: bash
+        run: |
+          test "${{ steps.fail.outcome }}" = "failure"
+
+  e2e-job-default:
+    name: job-wide default shell
+    needs: check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: actions-shell rust-script {0}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile && pnpm build
+        shell: bash
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: rust-script
+      - uses: ./
+      - run: |
+          println!("every run block is Rust now");
+      - run: |
+          use std::process::Command;
+
+          let status = Command::new("cargo").arg("--version").status().unwrap();
+          std::process::exit(status.code().unwrap_or(1));

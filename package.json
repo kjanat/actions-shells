@@ -1,0 +1,40 @@
+{
+  "name": "actions-shells",
+  "version": "0.1.0",
+  "private": true,
+  "description": "More shells for `run:` — additional executable languages for GitHub Actions steps",
+  "license": "MIT",
+  "author": "Kaj Kowalski",
+  "repository": "github:kjanat/actions-shells",
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "test": "vitest run",
+    "test:unit": "vitest run test/unit",
+    "test:integration": "pnpm build && vitest run test/integration",
+    "release:assemble": "pnpm build && node scripts/assemble-release.mjs",
+    "check": "pnpm lint && pnpm typecheck && pnpm build && pnpm test"
+  },
+  "dependencies": {
+    "@actions/core": "^3.0.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.12",
+    "@types/node": "^24.0.0",
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@biomejs/biome",
+      "esbuild"
+    ]
+  }
+}

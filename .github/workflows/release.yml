@@ -1,0 +1,129 @@
+name: Release
+
+# Source lives on master. A release is an orphan commit containing only
+# README.md, LICENSE, action.yml, cli.js and setup.js, tagged vX.Y.Z (immutable),
+# with vX.Y and vX moved to point at it. Built files are attested and attached
+# to a GitHub Release.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (X.Y.Z, no leading v)"
+        required: true
+        type: string
+      prerelease:
+        description: "Mark the GitHub Release as a pre-release (floating tags are NOT moved)"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Validate version
+        id: v
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          [[ "$VERSION" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(-[0-9A-Za-z.-]+)?$ ]] || { echo "invalid version: $VERSION"; exit 1; }
+          if git ls-remote --exit-code --tags origin "refs/tags/v$VERSION" >/dev/null; then
+            echo "tag v$VERSION already exists — release tags are immutable"; exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "major=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+          echo "minor=${BASH_REMATCH[2]}" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$([[ -n "${BASH_REMATCH[4]:-}" || "${{ inputs.prerelease }}" == "true" ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint && pnpm typecheck
+      - run: pnpm build
+        env:
+          ACTIONS_SHELL_VERSION: ${{ steps.v.outputs.version }}
+      - run: pnpm test:unit
+      - run: pnpm vitest run test/integration
+      - run: node scripts/assemble-release.mjs release
+
+      - name: Checksums
+        working-directory: release
+        run: sha256sum cli.js setup.js action.yml > SHA256SUMS && cat SHA256SUMS
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: |
+            release/cli.js
+            release/setup.js
+            release/action.yml
+
+      - name: Create orphan release commit and tags
+        id: tag
+        env:
+          VERSION: ${{ steps.v.outputs.version }}
+          MAJOR: ${{ steps.v.outputs.major }}
+          MINOR: ${{ steps.v.outputs.minor }}
+          PRERELEASE: ${{ steps.v.outputs.prerelease }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Build a tree from release/ only, using a throwaway index so master's tree is untouched.
+          export GIT_INDEX_FILE="$(mktemp)"
+          git --work-tree=release add -A
+          TREE="$(git write-tree)"
+          unset GIT_INDEX_FILE
+
+          COMMIT="$(git commit-tree "$TREE" -m "actions-shells v$VERSION" -m "Built from $(git rev-parse HEAD) on master.")"
+          git tag -a "v$VERSION" -m "actions-shells v$VERSION" "$COMMIT"
+          git push origin "refs/tags/v$VERSION"
+
+          if [[ "$PRERELEASE" != "true" ]]; then
+            git tag -f -a "v$MAJOR.$MINOR" -m "actions-shells v$MAJOR.$MINOR -> v$VERSION" "$COMMIT"
+            git tag -f -a "v$MAJOR" -m "actions-shells v$MAJOR -> v$VERSION" "$COMMIT"
+            git push --force origin "refs/tags/v$MAJOR.$MINOR" "refs/tags/v$MAJOR"
+          fi
+          echo "commit=$COMMIT" >> "$GITHUB_OUTPUT"
+
+      - name: Package
+        env:
+          VERSION: ${{ steps.v.outputs.version }}
+        run: |
+          set -euo pipefail
+          tar -C release -czf "actions-shells-v$VERSION.tgz" README.md LICENSE action.yml cli.js setup.js
+          cp release/SHA256SUMS release/cli.js release/setup.js .
+
+      - name: GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.v.outputs.version }}
+          name: v${{ steps.v.outputs.version }}
+          prerelease: ${{ steps.v.outputs.prerelease == 'true' }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            actions-shells-v${{ steps.v.outputs.version }}.tgz
+            cli.js
+            setup.js
+            SHA256SUMS
