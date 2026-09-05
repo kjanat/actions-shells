@@ -27,7 +27,7 @@ const common = {
 	target: 'node24',
 	dts: false,
 	minify: false,
-	deps: { alwaysBundle: ['@actions/core', 'ansispeck/safe'] },
+	deps: { alwaysBundle: ['@actions/core', /^ansispeck/] },
 	define: { 'process.env.ACTIONS_SHELL_VERSION_PLACEHOLDER': JSON.stringify(version) },
 	banner: { js: banner },
 	hash: false,
