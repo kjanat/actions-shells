@@ -12,6 +12,10 @@
 		"#runtimes": "./src/runtimes/index.ts",
 		"#pkg": "./package.json"
 	},
+	"bin": {
+		"actions-shell": "./cli.mjs",
+		"actions-shells": "./cli.mjs"
+	},
 	"scripts": {
 		"build": "tsdown",
 		"check": "run -s lint typecheck build test",
@@ -25,8 +29,7 @@
 		"test:unit": "vitest run test/unit",
 		"typecheck": "tsc --noEmit"
 	},
-	"dependencies": {
-	},
+	"dependencies": {},
 	"devDependencies": {
 		"@actions/core": "^3",
 		"@types/node": "^24",
