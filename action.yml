@@ -20,4 +20,4 @@ outputs:
   cli: { description: Absolute path to the bundled cli.js }
   version: { description: Installed actions-shell version }
 
-runs: [{ using: node24 }, { main: setup.js }]
+runs: { using: node24, main: setup.js }
