@@ -6,7 +6,7 @@ export interface ShimOptions {
 	binDir: string;
 	/** Absolute path to the node executable to use (the runner's own node). */
 	nodePath: string;
-	/** Absolute path to cli.js. */
+	/** Absolute path to cli.mjs. */
 	cliPath: string;
 }
 

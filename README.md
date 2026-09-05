@@ -123,7 +123,7 @@ Runtime flags go between the runtime name and `{0}`, exactly as GitHub's `comman
 | Output    | Meaning                                                         |
 | --------- | --------------------------------------------------------------- |
 | `bin-dir` | Directory holding the `actions-shell` shim (already on `PATH`). |
-| `cli`     | Absolute path to the bundled `cli.js`.                          |
+| `cli`     | Absolute path to the bundled `cli.mjs`.                         |
 | `version` | Installed version.                                              |
 
 ### Introspection
@@ -174,7 +174,7 @@ $ actions-shell doctor          # every runtime, exit 0; prints "n/17 runtimes r
 ```console
 actions-shell rust-script hello
 actions-shell go ./script
-node cli.js deno ./script      # without the shim
+node cli.mjs deno ./script      # without the shim
 ```
 
 Nothing depends on `GITHUB_*` variables, which is also how the test-suite works.
@@ -185,13 +185,13 @@ Supported. The setup action writes both `actions-shell` (sh) and `actions-shell.
 
 ## Versioning
 
-- `vX.Y.Z` — immutable release tags. Each is an orphan commit containing exactly `README.md`, `LICENSE`, `action.yml`, `cli.js`, `setup.js` (no source, no `node_modules`, fast to fetch).
+- `vX.Y.Z` — immutable release tags. Each is an orphan commit containing exactly `README.md`, `LICENSE`, `action.yml`, `cli.mjs`, `setup.mjs` (no source, no `node_modules`, fast to fetch).
 - `vX.Y`, `vX` — floating tags moved to the newest matching release.
 - `master` — source only. **Not usable as `uses:`** (there is nothing built there).
-- Every release ships `cli.js`, `setup.js` and `action.yml` with [build provenance attestations](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations) and a `SHA256SUMS` file:
+- Every release ships `cli.mjs`, `setup.mjs` and `action.yml` with [build provenance attestations](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations) and a `SHA256SUMS` file:
 
   ```console
-  gh attestation verify cli.js --repo kjanat/actions-shells
+  gh attestation verify cli.mjs --repo kjanat/actions-shells
   ```
 
 ## Why not…

@@ -6,10 +6,10 @@ import { describe, expect, it } from 'vitest';
 
 describe('shims', () => {
 	it('quote paths with spaces and apostrophes', () => {
-		const { posix, cmd } = shimSources({ binDir: '/b', nodePath: '/opt/host ed/node', cliPath: "/tmp/it's/cli.js" });
-		expect(posix).toContain(`exec '/opt/host ed/node' '/tmp/it'\\''s/cli.js' "$@"`);
+		const { posix, cmd } = shimSources({ binDir: '/b', nodePath: '/opt/host ed/node', cliPath: "/tmp/it's/cli.mjs" });
+		expect(posix).toContain(`exec '/opt/host ed/node' '/tmp/it'\\''s/cli.mjs' "$@"`);
 		expect(posix.startsWith('#!/bin/sh\n')).toBe(true);
-		expect(cmd).toContain(`"/opt/host ed/node" "/tmp/it's/cli.js" %*`);
+		expect(cmd).toContain(`"/opt/host ed/node" "/tmp/it's/cli.mjs" %*`);
 		expect(cmd).toContain('\r\n');
 	});
 

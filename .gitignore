@@ -1,8 +1,8 @@
 node_modules/
 # build output only lives in release tags, never on master
-/cli.js
-/setup.js
-/*.js.map
+/cli.mjs
+/setup.mjs
+/*.mjs.map
 /release/
 coverage/
 .vitest/

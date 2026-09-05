@@ -7,7 +7,7 @@ import url from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 const ROOT = path.dirname(url.fileURLToPath(import.meta.resolve('#pkg')));
-const SETUP = path.resolve(ROOT, 'setup.js');
+const SETUP = path.resolve(ROOT, 'setup.mjs');
 
 describe('setup action', () => {
 	it('writes shims, adds to GITHUB_PATH and works end-to-end', () => {

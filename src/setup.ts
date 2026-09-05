@@ -8,10 +8,10 @@ import path from 'node:path';
 
 function run(): void {
 	// Both files sit side by side in the release tag root (and in the repo root after `pnpm build`).
-	const cliPath = path.join(import.meta.dirname, 'cli.js');
+	const cliPath = path.join(import.meta.dirname, 'cli.mjs');
 	if (!existsSync(cliPath)) {
 		core.setFailed(
-			`cli.js not found next to setup.js (${cliPath}). Use a release tag such as kjanat/actions-shells@v1 — master carries no built files.`,
+			`cli.mjs not found next to setup.mjs (${cliPath}). Use a release tag such as kjanat/actions-shells@v1 — master carries no built files.`,
 		);
 		return;
 	}

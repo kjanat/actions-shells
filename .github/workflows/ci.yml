@@ -48,7 +48,7 @@ jobs:
       - uses: &TaikiE taiki-e/install-action@5bf6ce016fd2e72eefc647cbca1e4213f65955b8 # v2
         with: &RustScript { tool: rust-script }
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
-        with: { go-version: stable }
+        with: { go-version: stable, cache: false }
       - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2
         with: { deno-version: v2.x }
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
@@ -70,14 +70,12 @@ jobs:
 
       - uses: leafo/gh-actions-lua@6919171ccf181b826f44b9bca76307b577217377 # v13
         if: runner.os != 'Windows'
-      - uses: swift-actions/setup-swift@364295d9c23900ce04d4e5cc708387921b4e50f9 # v3
-        if: runner.os == 'Linux'
 
-      # integration tests spawn cli.js against every runtime found on PATH
+      # integration tests spawn cli.mjs against every runtime found on PATH
       - { run: run -- vitest run test/integration, shell: bash }
 
       # the real thing: use the action from this checkout, then `shell:` steps
-      - { uses: $/, with: { doctor: true } }
+      - { uses: ./, with: { doctor: true } }
 
       - name: rust-script
         shell: actions-shell rust-script {0}
@@ -143,7 +141,7 @@ jobs:
         run: println("kotlin says hi from ${System.getenv("RUNNER_OS")}")
 
       - name: swift
-        if: runner.os != 'Windows'
+        if: runner.os == 'macOS' # macOS runners ship Swift; no setup action needed
         shell: actions-shell swift {0}
         run: print("swift says hi")
 
@@ -207,7 +205,7 @@ jobs:
       - uses: *RustStable
       - uses: *TaikiE
         with: *RustScript
-      - uses: $/
+      - uses: ./
       - run: println!("every run block is Rust now");
       - run: |
           use std::process::Command;

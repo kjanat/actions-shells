@@ -3,14 +3,14 @@
 ## Layout
 
 - `src/` — TypeScript sources. `cli.ts` is the `actions-shell` executable, `setup.ts` the GitHub Action entry point. Runtime adapters live in `src/runtimes/index.ts`.
-- `test/unit` — no runtimes needed. `test/integration` — spawns the built `cli.js` against every runtime it can find on `PATH` and skips the rest.
-- `scripts/build.ts` — bundles `cli.js` and `setup.js` into the repo root (git-ignored).
+- `test/unit` — no runtimes needed. `test/integration` — spawns the built `cli.mjs` against every runtime it can find on `PATH` and skips the rest.
+- `tsdown.config.ts` — bundles `cli.mjs` and `setup.mjs` into the repo root (git-ignored).
 - `scripts/assemble-release.ts` — copies the five release files into `release/`.
 
 ```sh
 pnpm install
 pnpm check          # lint + typecheck + build + tests
-pnpm build && node cli.js doctor
+pnpm build && node cli.mjs doctor
 ```
 
 ## Adding a runtime
@@ -27,9 +27,9 @@ The adapter must not rewrite the user's source. If a runtime needs `fn main()`, 
 ## Branching and releases
 
 - Source lives on `master`. Built files are never committed there.
-- Release tags `vX.Y.Z` are orphan commits containing only `README.md`, `LICENSE`, `action.yml`, `cli.js` and `setup.js`. They are immutable: the release workflow refuses to overwrite one. Enable **Settings → Tags → Tag protection** (or immutable releases) on the repository so they cannot be moved by hand either.
+- Release tags `vX.Y.Z` are orphan commits containing only `README.md`, `LICENSE`, `action.yml`, `cli.mjs` and `setup.mjs`. They are immutable: the release workflow refuses to overwrite one. Enable **Settings → Tags → Tag protection** (or immutable releases) on the repository so they cannot be moved by hand either.
 - `vX.Y` and `vX` are floating and force-moved to the newest matching release.
-- To release: `Actions → Release → Run workflow` with the version. The workflow builds from `master`, runs the tests, attests `cli.js`/`setup.js`/`action.yml`, creates the tags and a GitHub Release with the tarball, the loose files and `SHA256SUMS`.
+- To release: `Actions → Release → Run workflow` with the version. The workflow builds from `master`, runs the tests, attests `cli.mjs`/`setup.mjs`/`action.yml`, creates the tags and a GitHub Release with the tarball, the loose files and `SHA256SUMS`.
 - `@master` is not usable as an action ref (no built files). Consumers use `@v1`, `@v1.2`, `@v1.2.3` or a commit SHA of a release tag.
 
  <!-- markdownlint-disable-file line-length -->

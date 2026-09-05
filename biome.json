@@ -1,7 +1,7 @@
 {
 	"$schema": "https://biomejs.dev/schemas/latest/schema.json",
 	"vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true, "defaultBranch": "master" },
-	"files": { "includes": ["**", "!cli.js", "!setup.js", "!release", "!coverage"] },
+	"files": { "includes": ["**", "!cli.mjs", "!setup.mjs", "!release", "!coverage"] },
 	"formatter": { "enabled": false },
 	"linter": { "enabled": true },
 	"assist": { "actions": { "recommended": true, "source": { "organizeImports": "off" } } }

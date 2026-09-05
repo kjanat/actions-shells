@@ -1,7 +1,7 @@
 name: Release
 
 # Source lives on master. A release is an orphan commit containing only
-# README.md, LICENSE, action.yml, cli.js and setup.js, tagged vX.Y.Z (immutable),
+# README.md, LICENSE, action.yml, cli.mjs and setup.mjs, tagged vX.Y.Z (immutable),
 # with vX.Y and vX moved to point at it. Built files are attested and attached
 # to a GitHub Release.
 
@@ -61,14 +61,14 @@ jobs:
 
       - name: Checksums
         working-directory: release
-        run: sha256sum cli.js setup.js action.yml > SHA256SUMS && cat SHA256SUMS
+        run: sha256sum cli.mjs setup.mjs action.yml > SHA256SUMS && cat SHA256SUMS
 
       - name: Attest build provenance
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
         with:
           subject-path: |
-            release/cli.js
-            release/setup.js
+            release/cli.mjs
+            release/setup.mjs
             release/action.yml
 
       - name: Create orphan release commit and tags
@@ -106,8 +106,8 @@ jobs:
         env: { VERSION: "${{ steps.v.outputs.version }}" }
         run: |
           set -euo pipefail
-          tar -C release -czf "actions-shells-v${VERSION}.tgz" README.md LICENSE action.yml cli.js setup.js
-          cp release/SHA256SUMS release/cli.js release/setup.js .
+          tar -C release -czf "actions-shells-v${VERSION}.tgz" README.md LICENSE action.yml cli.mjs setup.mjs
+          cp release/SHA256SUMS release/cli.mjs release/setup.mjs .
 
       - name: GitHub Release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3
@@ -119,6 +119,6 @@ jobs:
           fail_on_unmatched_files: true
           files: |
             actions-shells-v${{ steps.v.outputs.version }}.tgz
-            cli.js
-            setup.js
+            cli.mjs
+            setup.mjs
             SHA256SUMS

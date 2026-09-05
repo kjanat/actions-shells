@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Assemble the exact tree that a release tag contains:
- *   README.md  LICENSE  action.yml  cli.js  setup.js
+ *   README.md  LICENSE  action.yml  cli.mjs  setup.mjs
  * Nothing else. Tags are orphan commits of this directory (see .github/workflows/release.yml).
  */
 import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync, statSync } from 'node:fs';
@@ -10,7 +10,7 @@ import url from 'node:url';
 
 const root = path.dirname(url.fileURLToPath(import.meta.resolve('#pkg')));
 const out = process.argv[2] ? path.resolve(process.argv[2]) : path.join(root, 'release');
-const files = ['README.md', 'LICENSE', 'action.yml', 'cli.js', 'setup.js'];
+const files = ['README.md', 'LICENSE', 'action.yml', 'cli.mjs', 'setup.mjs'];
 
 for (const f of files) {
 	if (!existsSync(path.join(root, f))) {

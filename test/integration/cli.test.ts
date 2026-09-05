@@ -1,5 +1,5 @@
 /**
- * End-to-end tests against the built cli.js, using whatever runtimes exist on this
+ * End-to-end tests against the built cli.mjs, using whatever runtimes exist on this
  * machine. Missing runtimes are skipped, not failed — CI installs the full set.
  */
 
@@ -13,7 +13,7 @@ import url from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 const ROOT = path.dirname(url.fileURLToPath(import.meta.resolve('#pkg')));
-const CLI = path.resolve(ROOT, 'cli.js');
+const CLI = path.resolve(ROOT, 'cli.mjs');
 
 interface Case {
 	runtime: string;
