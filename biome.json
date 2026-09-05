@@ -1,8 +1,23 @@
 {
-	"$schema": "https://biomejs.dev/schemas/latest/schema.json",
+	"$schema": "./node_modules/biome/configuration_schema.json",
 	"vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true, "defaultBranch": "master" },
-	"files": { "includes": ["**", "!cli.mjs", "!setup.mjs", "!release", "!coverage"] },
+	"files": {
+		"ignoreUnknown": true,
+		"includes": ["**", "!cli.mjs", "!setup.mjs", "!release", "!coverage"]
+	},
 	"formatter": { "enabled": false },
-	"linter": { "enabled": true },
-	"assist": { "actions": { "recommended": true, "source": { "organizeImports": "off" } } }
+	"linter": {
+		"enabled": true,
+		"domains": { "project": "recommended", "test": "recommended", "types": "recommended" },
+		"rules": {
+			"preset": "recommended",
+			"complexity": { "useLiteralKeys": "off" }
+		}
+	},
+	"assist": {
+		"actions": {
+			"recommended": true,
+			"source": { "organizeImports": "off" }
+		}
+	}
 }

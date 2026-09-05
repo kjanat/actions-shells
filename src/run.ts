@@ -1,4 +1,5 @@
-import { cleanupSource, type PreparedSource, prepareSource } from '#prepare';
+import type { PreparedSource } from '#prepare';
+import { cleanupSource, prepareSource } from '#prepare';
 import { applyEnvOverrides } from '#registry';
 import { planSpawn } from '#spawn-args';
 import type { RuntimeAdapter } from '#types';
