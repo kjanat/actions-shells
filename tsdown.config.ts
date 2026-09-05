@@ -24,6 +24,7 @@ const common = {
 	deps: { alwaysBundle: ['@actions/core', /^@kjanat\/dreamcli/, /^ansispeck/] },
 	define: { 'process.env.ACTIONS_SHELL_VERSION_PLACEHOLDER': JSON.stringify(version) },
 	banner: { js: banner },
+	minify: 'dce-only',
 } satisfies UserConfig;
 
 export default defineConfig([

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { describeInput, doctor, formatReport } from '#doctor';
+import pkg from '#pkg' with { type: 'json' };
 import { aliasesFor, allRuntimes, envKey, resolveRuntime } from '#registry';
 import { runScript, RuntimeNotFoundError } from '#run';
 import type { RuntimeAdapter } from '#types';
@@ -115,6 +116,7 @@ const doctorCommand = command('doctor')
 	});
 
 let app = cli('actions-shell')
+	.manifest(pkg).links().completions({ as: 'flag' })
 	.version(VERSION)
 	.description(`More shells for ${underline`${dim`run:`}`}`)
 	.builtins({ json: 'off', quiet: 'off' })
