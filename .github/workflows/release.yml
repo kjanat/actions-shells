@@ -84,7 +84,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           # Build a tree from release/ only, using a throwaway index so master's tree is untouched.
-          GIT_INDEX_FILE="$(mktemp)"
+          GIT_INDEX_FILE="$(mktemp -u)"
           export GIT_INDEX_FILE
           git --work-tree=release add -A
           TREE="$(git write-tree)"
