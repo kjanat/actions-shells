@@ -27,6 +27,7 @@
 	},
 	"dependencies": {
 		"@actions/core": "^3",
+		"@kjanat/dreamcli": "4.0.0-rc.2",
 		"ansispeck": "^0.4.2"
 	},
 	"devDependencies": {

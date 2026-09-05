@@ -166,7 +166,7 @@ $ actions-shell doctor          # every runtime, exit 0; prints "n/17 runtimes r
 ### Exit codes and diagnostics
 
 - The step's exit code is the script's exit code. Signals become `128 + signal`.
-- Unknown runtime: exit 2 with the list of runtimes. Runtime not on `PATH`: exit 127 with an install hint.
+- Unknown runtime: exit 2 with a did-you-mean suggestion. Runtime not on `PATH`: exit 127 with an install hint.
 - For runtimes that need an extension, the sibling file is created **next to** GitHub's temp file, so compiler output reads `/home/runner/work/_temp/abc123.rs:3:5` — same directory, same name, just an extension. It is removed after the run.
 
 ### Outside GitHub

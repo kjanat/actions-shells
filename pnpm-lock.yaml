@@ -210,6 +210,9 @@ importers:
       '@actions/core':
         specifier: ^3
         version: 3.0.1
+      '@kjanat/dreamcli':
+        specifier: 4.0.0-rc.2
+        version: 4.0.0-rc.2
       ansispeck:
         specifier: ^0.4.2
         version: 0.4.2
@@ -556,6 +559,10 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
+
+  '@kjanat/dreamcli@4.0.0-rc.2':
+    resolution: {integrity: sha512-wPxReC1v/+mo7TpDN3Wa3Fc6eUBCPvK25/oU7w5rXksRBfeNhp4+4Ilvjj78geEt+wpLHOpaLDI6c2ricPmGJg==}
+    engines: {bun: '>=1.3', deno: '>=2.6.0', node: '>=22.22.2'}
 
   '@oxc-project/types@0.148.0':
     resolution: {integrity: sha512-Nm4s/jB+4FpFsPhWGEC4h7rzksesmtnMXomo6rCMcg/b8zLQuOziRgkCS1fxDCXOlJB/6Q8oABOZ/OP6RIPj9A==}
@@ -1629,6 +1636,10 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
+
+  '@kjanat/dreamcli@4.0.0-rc.2':
+    dependencies:
+      ansispeck: 0.4.2
 
   '@oxc-project/types@0.148.0': {}
 

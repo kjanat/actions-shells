@@ -2,30 +2,11 @@
 import { describeInput, doctor, formatReport } from '#doctor';
 import { aliasesFor, allRuntimes, envKey, resolveRuntime } from '#registry';
 import { runScript, RuntimeNotFoundError } from '#run';
+import type { RuntimeAdapter } from '#types';
 import { VERSION } from '#version';
+import { arg, cli, CLIError, command } from '@kjanat/dreamcli';
+import { createNodeAdapter } from '@kjanat/dreamcli/runtime';
 import { dim, underline } from 'ansispeck/safe';
-
-const USAGE = `actions-shell ${VERSION} — more shells for ${underline`${dim`run:`}`}
-
-Usage (GitHub Actions):
-  shell: actions-shell <runtime> [runtime-args...] {0}
-
-Usage (anywhere):
-  actions-shell <runtime> [runtime-args...] <file>
-  actions-shell list
-  actions-shell describe <runtime>
-  actions-shell doctor [runtime]
-  actions-shell --version | --help
-
-Environment:
-  ACTIONS_SHELL_<RUNTIME>_COMMAND   override the executable (e.g. ACTIONS_SHELL_CARGO_SCRIPT_COMMAND)
-  ACTIONS_SHELL_<RUNTIME>_ARGS      extra arguments inserted before the adapter's own
-  ACTIONS_SHELL_DEBUG=1             print the resolved command line to stderr
-  ACTIONS_SHELL_KEEP=1              keep the normalised temp file after the run
-`;
-
-const out = (text: string) => process.stdout.write(`${text}\n`);
-const err = (text: string) => process.stderr.write(`${text}\n`);
 
 function listText(): string {
 	const rows = allRuntimes().map((a) => {
@@ -43,34 +24,53 @@ function listText(): string {
 		.join('\n');
 }
 
-const unknownRuntime = (id: string): number => {
-	err(`actions-shell: unknown runtime "${id}"\n\nAvailable runtimes:\n${listText()}`);
-	return 2;
-};
+function runtimeOrThrow(id: string): RuntimeAdapter {
+	const adapter = resolveRuntime(id);
+	if (!adapter) {
+		throw new CLIError(`unknown runtime "${id}"`, {
+			code: 'UNKNOWN_RUNTIME',
+			exitCode: 2,
+			suggest: `run 'actions-shell list' to see the available runtimes`,
+		});
+	}
+	return adapter;
+}
 
-async function main(argv: string[]): Promise<number> {
-	const [first, ...rest] = argv;
+const runtimeArg = arg.string().variadic().describe('Runtime arguments, script path last');
 
-	if (!first || first === '--help' || first === '-h' || first === 'help') {
-		out(USAGE.trimEnd());
-		return first ? 0 : 2;
-	}
-	if (first === '--version' || first === '-V' || first === 'version') {
-		out(VERSION);
-		return 0;
-	}
-	if (first === 'list') {
-		out(listText());
-		return 0;
-	}
-	if (first === 'describe') {
-		const id = rest[0];
-		if (!id) {
-			err('usage: actions-shell describe <runtime>');
-			return 2;
-		}
-		const adapter = resolveRuntime(id);
-		if (!adapter) return unknownRuntime(id);
+const runCommand = (id: string, adapter: RuntimeAdapter) =>
+	command(id)
+		.description(adapter.title)
+		.arg('args', runtimeArg)
+		.example((m) => `shell: ${m.name} ${id} {0}`, 'GitHub Actions step')
+		.example((m) => `${m.name} ${id} ./script`, 'Anywhere else')
+		.action(async ({ args, out }) => {
+			const scriptPath = args.args.at(-1);
+			if (!scriptPath) {
+				throw new CLIError(`usage: actions-shell ${id} [runtime-args...] <file>`, {
+					code: 'MISSING_SCRIPT',
+					exitCode: 2,
+				});
+			}
+			try {
+				out.setExitCode(await runScript({ adapter, scriptPath, userArgs: args.args.slice(0, -1) }));
+			} catch (e) {
+				if (e instanceof RuntimeNotFoundError) {
+					throw new CLIError(e.message, { code: 'RUNTIME_NOT_FOUND', exitCode: 127, cause: e });
+				}
+				throw e;
+			}
+		});
+
+const list = command('list')
+	.description('List runtimes and aliases')
+	.action(({ out }) => out.log(listText()));
+
+const describe = command('describe')
+	.description('Show how a runtime is invoked')
+	.arg('runtime', arg.string().describe('Runtime id or alias'))
+	.action(({ args, out }) => {
+		const adapter = runtimeOrThrow(args.runtime);
 		const { input, extension } = describeInput(adapter);
 		const key = envKey(adapter.name);
 		const example = adapter.args('{0}', []).join(' ');
@@ -89,59 +89,48 @@ async function main(argv: string[]): Promise<number> {
 		];
 		if (adapter.install) lines.push(`install:            ${adapter.install}`);
 		if (adapter.notes) lines.push(`notes:              ${adapter.notes}`);
-		out(lines.join('\n'));
-		return 0;
-	}
-	if (first === 'doctor') {
-		const id = rest[0];
-		if (id) {
-			const adapter = resolveRuntime(id);
-			if (!adapter) return unknownRuntime(id);
+		out.log(lines.join('\n'));
+	});
+
+const doctorCommand = command('doctor')
+	.description('Report whether runtimes are ready on this machine')
+	.arg('runtime', arg.string().optional().describe('Runtime id or alias; all when omitted'))
+	.action(({ args, out }) => {
+		if (args.runtime) {
+			const adapter = runtimeOrThrow(args.runtime);
 			const report = doctor(adapter);
-			out(formatReport(report));
-			if (report.status !== 'ready' && process.env.GITHUB_ACTIONS === 'true') {
-				out(`::warning title=actions-shell::runtime ${adapter.name} is ${report.status} (${report.command})`);
+			out.log(formatReport(report));
+			if (report.status !== 'ready') {
+				if (process.env.GITHUB_ACTIONS === 'true') {
+					out.log(`::warning title=actions-shell::runtime ${adapter.name} is ${report.status} (${report.command})`);
+				}
+				out.setExitCode(1);
 			}
-			return report.status === 'ready' ? 0 : 1;
+			return;
 		}
 		const reports = allRuntimes().map((a) => doctor(a));
-		out(reports.map(formatReport).join('\n\n'));
+		out.log(reports.map(formatReport).join('\n\n'));
 		const ready = reports.filter((r) => r.status === 'ready').length;
-		out(`\n${ready}/${reports.length} runtimes ready`);
-		return 0;
-	}
+		out.log(`\n${ready}/${reports.length} runtimes ready`);
+	});
 
-	// Script execution: actions-shell <runtime> [runtime-args...] [--] <file>
-	const adapter = resolveRuntime(first);
-	if (!adapter) return unknownRuntime(first);
+let app = cli('actions-shell')
+	.version(VERSION)
+	.description(`More shells for ${underline`${dim`run:`}`}`)
+	.builtins({ json: 'off', quiet: 'off' })
+	.command(list)
+	.command(describe)
+	.command(doctorCommand);
 
-	const args = [...rest];
-	const dashdash = args.indexOf('--');
-	const userArgs = dashdash >= 0 ? args.slice(0, dashdash) : args.slice(0, -1);
-	const scriptPath = dashdash >= 0 ? args[dashdash + 1] : args[args.length - 1];
-	if (!scriptPath) {
-		err(`usage: actions-shell ${adapter.name} [runtime-args...] <file>`);
-		return 2;
-	}
-
-	try {
-		return await runScript({ adapter, scriptPath, userArgs });
-	} catch (e) {
-		if (e instanceof RuntimeNotFoundError) {
-			err(e.message);
-			return 127;
-		}
-		err(`actions-shell: ${e instanceof Error ? e.message : String(e)}`);
-		return 1;
-	}
+for (const adapter of allRuntimes()) {
+	app = app.command(runCommand(adapter.name, adapter));
+	for (const alias of aliasesFor(adapter.name)) app = app.command(runCommand(alias, adapter).hidden());
 }
 
-main(process.argv.slice(2)).then(
-	(code) => {
-		process.exitCode = code;
-	},
-	(e) => {
-		err(`actions-shell: ${e instanceof Error ? (e.stack ?? e.message) : String(e)}`);
-		process.exitCode = 1;
-	},
-);
+const raw = process.argv.slice(2);
+const last = raw.at(-1);
+const argv = raw.length >= 2 && last && !last.startsWith('-')
+	? [raw[0] as string, '--', ...raw.slice(1).filter((t) => t !== '--')]
+	: raw;
+
+await app.run({ adapter: createNodeAdapter({ ...process, argv: [...process.argv.slice(0, 2), ...argv] }) });
