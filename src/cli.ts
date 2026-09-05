@@ -2,8 +2,9 @@ import { describeInput, doctor, formatReport } from '#doctor';
 import { aliasesFor, allRuntimes, envKey, resolveRuntime } from '#registry';
 import { runScript, RuntimeNotFoundError } from '#run';
 import { VERSION } from '#version';
+import { dim, underline } from 'ansispeck/safe';
 
-const USAGE = `actions-shell ${VERSION} — more shells for \`run:\`
+const USAGE = `actions-shell ${VERSION} — more shells for ${underline`${dim`run:`}`}
 
 Usage (GitHub Actions):
   shell: actions-shell <runtime> [runtime-args...] {0}

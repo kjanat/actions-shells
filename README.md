@@ -2,9 +2,7 @@
 
 **More shells for `run:`.**
 
-GitHub Actions lets a step pick its interpreter with `shell:`. Out of the box that means
-bash, pwsh, python, and a few others. This action adds the rest: Rust, Go, Deno, Bun, Kotlin,
-Swift, C#, F#, Ruby, Perl, PHP, Lua, Julia, R.
+GitHub Actions lets a step pick its interpreter with `shell:`. Out of the box that means bash, pwsh, python, and a few others. This action adds the rest: Rust, Go, Deno, Bun, Kotlin, Swift, C#, F#, Ruby, Perl, PHP, Lua, Julia, R.
 
 ````yaml
 jobs:
@@ -41,8 +39,7 @@ jobs:
 
 ## How it works
 
-GitHub writes the `run:` body to an extensionless temp file and substitutes its path for `{0}`.
-`actions-shell <runtime> {0}` turns that file into valid input for the runtime and execs it:
+GitHub writes the `run:` body to an extensionless temp file and substitutes its path for `{0}`. `actions-shell <runtime> {0}` turns that file into valid input for the runtime and execs it:
 
 ```text
 GitHub extensionless temp file
@@ -79,8 +76,7 @@ That is the whole job. `actions-shells` does **not**:
 | `actions-shell julia {0}`        | `julia`                              | `julia-actions/setup-julia`                                               |                                                                                                                            |
 | `actions-shell r {0}`            | `Rscript`                            | `r-lib/actions/setup-r`                                                   |                                                                                                                            |
 
-Aliases: `rust`→rust-script, `js`/`javascript`→node, `ts`/`typescript`→deno, `cs`→csharp,
-`fs`→fsharp, `kt`/`kts`→kotlin, `rb`→ruby, `pl`→perl, `jl`→julia, `py`→python, `rscript`→r.
+Aliases: `rust`→rust-script, `js`/`javascript`→node, `ts`/`typescript`→deno, `cs`→csharp, `fs`→fsharp, `kt`/`kts`→kotlin, `rb`→ruby, `pl`→perl, `jl`→julia, `py`→python, `rscript`→r.
 
 `actions-shell list` prints this table from the binary itself.
 
@@ -103,18 +99,14 @@ Per step:
 Job-wide:
 
 ```yaml
-defaults:
-  run:
-    shell: actions-shell deno {0}
-
+defaults: { run: { shell: "actions-shell deno {0}" } }
 steps:
   - uses: denoland/setup-deno@v2
   - uses: kjanat/actions-shells@v1 # a `uses:` step, so the default shell does not apply to it
   - run: console.log(Deno.version.deno);
 ```
 
-Runtime flags go between the runtime name and `{0}`, exactly as GitHub's
-`command [options] {0} [more_options]` contract allows:
+Runtime flags go between the runtime name and `{0}`, exactly as GitHub's `command [options] {0} [more_options]` contract allows:
 
 ```yaml
 - shell: actions-shell deno --no-check --allow-net {0}
@@ -158,8 +150,7 @@ $ actions-shell list
 $ actions-shell doctor          # every runtime, exit 0; prints "n/17 runtimes ready"
 ```
 
-`doctor <runtime>` exits 1 when the runtime is missing and emits a `::warning::` annotation on
-GitHub, so a failing job says *why* instead of "Process completed with exit code 1".
+`doctor <runtime>` exits 1 when the runtime is missing and emits a `::warning::` annotation on GitHub, so a failing job says *why* instead of "Process completed with exit code 1".
 
 ### Environment variables
 
@@ -175,11 +166,8 @@ GitHub, so a failing job says *why* instead of "Process completed with exit code
 ### Exit codes and diagnostics
 
 - The step's exit code is the script's exit code. Signals become `128 + signal`.
-- Unknown runtime: exit 2 with the list of runtimes. Runtime not on `PATH`: exit 127 with an
-  install hint.
-- For runtimes that need an extension, the sibling file is created **next to** GitHub's temp
-  file, so compiler output reads `/home/runner/work/_temp/abc123.rs:3:5` — same directory,
-  same name, just an extension. It is removed after the run.
+- Unknown runtime: exit 2 with the list of runtimes. Runtime not on `PATH`: exit 127 with an install hint.
+- For runtimes that need an extension, the sibling file is created **next to** GitHub's temp file, so compiler output reads `/home/runner/work/_temp/abc123.rs:3:5` — same directory, same name, just an extension. It is removed after the run.
 
 ### Outside GitHub
 
@@ -193,20 +181,14 @@ Nothing depends on `GITHUB_*` variables, which is also how the test-suite works.
 
 ## Windows
 
-Supported. The setup action writes both `actions-shell` (sh) and `actions-shell.cmd`, using the
-runner's own Node, and adds their directory to `PATH`. Paths with spaces are handled; nothing is
-passed through `cmd.exe` quoting. Swift and Lua have no Windows setup action in CI, so they are
-untested there.
+Supported. The setup action writes both `actions-shell` (sh) and `actions-shell.cmd`, using the runner's own Node, and adds their directory to `PATH`. Paths with spaces are handled; nothing is passed through `cmd.exe` quoting. Swift and Lua have no Windows setup action in CI, so they are untested there.
 
 ## Versioning
 
-- `vX.Y.Z` — immutable release tags. Each is an orphan commit containing exactly `README.md`,
-  `LICENSE`, `action.yml`, `cli.js`, `setup.js` (no source, no `node_modules`, fast to fetch).
+- `vX.Y.Z` — immutable release tags. Each is an orphan commit containing exactly `README.md`, `LICENSE`, `action.yml`, `cli.js`, `setup.js` (no source, no `node_modules`, fast to fetch).
 - `vX.Y`, `vX` — floating tags moved to the newest matching release.
 - `master` — source only. **Not usable as `uses:`** (there is nothing built there).
-- Every release ships `cli.js`, `setup.js` and `action.yml` with
-  [build provenance attestations](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations)
-  and a `SHA256SUMS` file:
+- Every release ships `cli.js`, `setup.js` and `action.yml` with [build provenance attestations](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations) and a `SHA256SUMS` file:
 
   ```console
   gh attestation verify cli.js --repo kjanat/actions-shells
@@ -214,17 +196,14 @@ untested there.
 
 ## Why not…
 
-- **…teach this action to install Rust/Deno/Go?** The official setup actions already handle
-  versions, caches, architectures, mirrors and auth. One job per tool.
-- **…wrap scripts in `main()` for the user?** Then the language in `run:` is no longer the
-  language, and diagnostics stop matching what you wrote.
-- **…one executable per language?** `actions-shell <runtime> {0}` is a single install, a single
-  code path for exit codes, signals, Windows paths and cleanup, and a single `doctor`.
+- **…teach this action to install Rust/Deno/Go?** The official setup actions already handle versions, caches, architectures, mirrors and auth. One job per tool.
+- **…wrap scripts in `main()` for the user?** Then the language in `run:` is no longer the language, and diagnostics stop matching what you wrote.
+- **…one executable per language?** `actions-shell <runtime> {0}` is a single install, a single code path for exit codes, signals, Windows paths and cleanup, and a single `doctor`.
 
-Related: [scriptisto](https://github.com/igor-petruk/scriptisto) makes compiled languages usable
-as shebang scripts in general; `actions-shells` only makes language runtimes satisfy GitHub's
-`shell:` protocol.
+Related: [scriptisto](https://github.com/igor-petruk/scriptisto) makes compiled languages usable as shebang scripts in general; `actions-shells` only makes language runtimes satisfy GitHub's `shell:` protocol.
 
 ## License
 
 [MIT](LICENSE)
+
+ <!-- markdownlint-disable-file line-length -->

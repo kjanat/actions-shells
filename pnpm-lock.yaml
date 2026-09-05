@@ -210,6 +210,9 @@ importers:
       '@actions/core':
         specifier: ^3
         version: 3.0.1
+      ansispeck:
+        specifier: ^0.4.2
+        version: 0.4.2
     devDependencies:
       '@biomejs/biome':
         specifier: ^2.5
