@@ -13,12 +13,12 @@ describe('shims', () => {
 		expect(cmd).toContain('\r\n');
 	});
 
-	it('write both shim files, executable on posix', () => {
+	it('write all shim files, executable on posix', () => {
 		const dir = mkdtempSync(path.join(os.tmpdir(), 'actions-shell-shim-'));
 		try {
 			const written = writeShims({ binDir: path.join(dir, 'bin'), nodePath: process.execPath, cliPath: '/c.js' });
 			expect(written.map((w) => path.basename(w)).sort())
-				.toEqual(['actions-shell', 'actions-shell.cmd']);
+				.toEqual(['actions-shell', 'actions-shell.cmd', 'actions-shells', 'actions-shells.cmd']);
 			const posix = written.find((w) => w.endsWith('actions-shell')) ?? '';
 			expect(readFileSync(posix, 'utf8')).toContain(process.execPath);
 			if (process.platform !== 'win32') expect(statSync(posix).mode & 0o111).not.toBe(0);

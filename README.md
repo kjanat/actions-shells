@@ -181,7 +181,7 @@ Nothing depends on `GITHUB_*` variables, which is also how the test-suite works.
 
 ## Windows
 
-Supported. The setup action writes both `actions-shell` (sh) and `actions-shell.cmd`, using the runner's own Node, and adds their directory to `PATH`. Paths with spaces are handled; nothing is passed through `cmd.exe` quoting. Swift and Lua have no Windows setup action in CI, so they are untested there.
+Supported. The setup action writes both `actions-shell` (sh) and `actions-shell.cmd`, using the runner's own Node, and adds their directory to `PATH`. `actions-shells` works as well, so the repository name and the executable name are interchangeable. Paths with spaces are handled; nothing is passed through `cmd.exe` quoting. Swift and Lua have no Windows setup action in CI, so they are untested there.
 
 ## Versioning
 

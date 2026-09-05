@@ -28,18 +28,24 @@ export function shimSources(opts: ShimOptions): { posix: string; cmd: string } {
 	return { posix, cmd };
 }
 
-/** Write `actions-shell` and `actions-shell.cmd` into binDir. Returns the paths written. */
+export const SHIM_NAMES = ['actions-shell', 'actions-shells'] as const;
+
+/** Write `<name>` and `<name>.cmd` for every shim name into binDir. Returns the paths written. */
 export function writeShims(opts: ShimOptions): string[] {
 	mkdirSync(opts.binDir, { recursive: true });
 	const { posix, cmd } = shimSources(opts);
-	const posixPath = path.join(opts.binDir, 'actions-shell');
-	const cmdPath = path.join(opts.binDir, 'actions-shell.cmd');
-	writeFileSync(posixPath, posix, { mode: 0o755 });
-	try {
-		chmodSync(posixPath, 0o755);
-	} catch {
-		/* windows */
+	const written: string[] = [];
+	for (const name of SHIM_NAMES) {
+		const posixPath = path.join(opts.binDir, name);
+		const cmdPath = path.join(opts.binDir, `${name}.cmd`);
+		writeFileSync(posixPath, posix, { mode: 0o755 });
+		try {
+			chmodSync(posixPath, 0o755);
+		} catch {
+			/* windows */
+		}
+		writeFileSync(cmdPath, cmd);
+		written.push(posixPath, cmdPath);
 	}
-	writeFileSync(cmdPath, cmd);
-	return [posixPath, cmdPath];
+	return written;
 }

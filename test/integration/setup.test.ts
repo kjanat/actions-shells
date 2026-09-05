@@ -34,6 +34,10 @@ describe('setup action', () => {
 			expect(binDir).toBe(path.join(dir, 'actions-shell', 'bin'));
 			expect(existsSync(path.join(binDir, 'actions-shell'))).toBe(true);
 			expect(existsSync(path.join(binDir, 'actions-shell.cmd'))).toBe(true);
+			expect(existsSync(path.join(binDir, 'actions-shells'))).toBe(true);
+			expect(existsSync(path.join(binDir, 'actions-shells.cmd'))).toBe(true);
+			expect(readFileSync(ghEnv, 'utf8')).toMatch(/^ACTIONS_SHELL_CLI<<actions-shell_[0-9a-f-]+\n.*cli\.mjs\n/);
+			expect(readFileSync(ghOut, 'utf8')).toContain('bin-dir<<');
 
 			const script = path.join(dir, 'step');
 			writeFileSync(script, 'console.log("via shim")');

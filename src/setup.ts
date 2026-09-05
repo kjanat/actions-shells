@@ -1,7 +1,7 @@
 #!/usr/bin/env node
+import { addPath, debug, exportVariable, getBooleanInput, getInput, info, setFailed, setOutput } from '#actions';
 import { writeShims } from '#shim';
 import { VERSION } from '#version';
-import { addPath, debug, exportVariable, getBooleanInput, getInput, info, setFailed, setOutput } from '@actions/core';
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import os from 'node:os';
