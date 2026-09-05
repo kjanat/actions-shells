@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { writeShims } from '#shim';
 import { VERSION } from '#version';
 import * as core from '@actions/core';

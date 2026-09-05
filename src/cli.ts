@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { describeInput, doctor, formatReport } from '#doctor';
 import { aliasesFor, allRuntimes, envKey, resolveRuntime } from '#registry';
 import { runScript, RuntimeNotFoundError } from '#run';
