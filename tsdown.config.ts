@@ -1,8 +1,8 @@
 import pkg from '#pkg' with { type: 'json' };
-import { packageRepositoryUrl } from '@kjanat/dreamcli';
+import { packageRepositoryUrl } from 'dreamcli';
 import { spawnSync } from 'node:child_process';
 import { env } from 'node:process';
-import { defineConfig, type UserConfig } from 'tsdown';
+import { defineConfig } from 'tsdown';
 
 const version = env.ACTIONS_SHELL_VERSION ?? pkg.version;
 const commitSha = env.GITHUB_SHA ?? spawnSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).stdout.trim();
@@ -23,11 +23,10 @@ const banner = `\
 const common = {
 	outDir: import.meta.dirname,
 	clean: false,
-	deps: { alwaysBundle: ['@actions/core', /^@kjanat\/dreamcli/, /^ansispeck/] },
 	define: { 'process.env.ACTIONS_SHELL_VERSION_PLACEHOLDER': JSON.stringify(version) },
 	banner: { js: banner },
-	minify: 'dce-only',
-} satisfies UserConfig;
+	minify: true,
+} satisfies import('tsdown').UserConfig;
 
 export default defineConfig([
 	{ ...common, entry: { cli: 'src/cli.ts' } },

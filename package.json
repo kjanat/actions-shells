@@ -26,14 +26,14 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@actions/core": "^3",
-		"@kjanat/dreamcli": "4.0.0-rc.2",
-		"ansispeck": "^0.4.2"
 	},
 	"devDependencies": {
+		"@actions/core": "^3",
 		"@types/node": "^24",
+		"ansispeck": "^0.4.2",
 		"biome": "npm:@biomejs/biome@^2.5",
 		"dprint": "^0.57",
+		"dreamcli": "npm:@kjanat/dreamcli@^4.0.0-rc.2",
 		"runner-run": "^0.25",
 		"tsdown": "^0.23.0",
 		"typescript": "^7",

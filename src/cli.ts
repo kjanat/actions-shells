@@ -5,9 +5,9 @@ import { aliasesFor, allRuntimes, envKey, resolveRuntime } from '#registry';
 import { runScript, RuntimeNotFoundError } from '#run';
 import type { RuntimeAdapter } from '#types';
 import { VERSION } from '#version';
-import { arg, cli, CLIError, command } from '@kjanat/dreamcli';
-import { createNodeAdapter } from '@kjanat/dreamcli/runtime';
 import { dim, underline } from 'ansispeck/safe';
+import { arg, cli, CLIError, command } from 'dreamcli';
+import { createNodeAdapter } from 'dreamcli/runtime';
 
 function listText(): string {
 	const rows = allRuntimes().map((a) => {
