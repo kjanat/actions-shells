@@ -3,10 +3,9 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import url from 'node:url';
 import { describe, expect, it } from 'vitest';
 
-const ROOT = path.dirname(url.fileURLToPath(import.meta.resolve('#pkg')));
+const ROOT = path.resolve(import.meta.dirname, '../..');
 const SETUP = path.resolve(ROOT, 'setup.mjs');
 
 describe('setup action', () => {

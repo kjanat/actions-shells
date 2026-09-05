@@ -9,10 +9,9 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import url from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-const ROOT = path.dirname(url.fileURLToPath(import.meta.resolve('#pkg')));
+const ROOT = path.resolve(import.meta.dirname, '../..');
 const CLI = path.resolve(ROOT, 'cli.mjs');
 
 interface Case {

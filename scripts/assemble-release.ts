@@ -6,9 +6,8 @@
  */
 import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync, statSync } from 'node:fs';
 import path from 'node:path';
-import url from 'node:url';
 
-const root = path.dirname(url.fileURLToPath(import.meta.resolve('#pkg')));
+const root = path.resolve(import.meta.dirname, '..');
 const out = process.argv[2] ? path.resolve(process.argv[2]) : path.join(root, 'release');
 const files = ['README.md', 'LICENSE', 'action.yml', 'cli.mjs', 'setup.mjs'];
 
