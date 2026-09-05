@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { defineConfig } from 'tsdown';
-import pkg from './package.json' with { type: 'json' };
+import pkg from '#pkg' with { type: 'json' };
 
 const version = process.env.ACTIONS_SHELL_VERSION ?? pkg.version;
 const commitSha = process.env.GITHUB_SHA ?? spawnSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).stdout.trim();
