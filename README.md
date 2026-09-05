@@ -15,12 +15,14 @@ jobs:
     steps:
       - uses: dtolnay/rust-toolchain@stable
       - uses: taiki-e/install-action@v2
-        with:
-          tool: rust-script
-      - uses: kjanat/actions-shells@v1
+        with: { tool: rust-script }
 
-      - run: |
-          println!("hello, Actions");
+      - uses: kjanat/actions-shells@v0     # Use latest major floating release
+      - uses: kjanat/actions-shells@v0.1   # Use latest minor floating release
+      - uses: kjanat/actions-shells@v0.1.0 # Patch releases are "immutable", so this should be safe
+      - uses: kjanat/actions-shells@697bb547ef1ce427e202b4cbcdb19886aa587da7 # or pin to the commit
+
+      - run: println!("hello, Actions");
 
       - run: |
           //! ```cargo
