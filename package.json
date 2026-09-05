@@ -1,7 +1,6 @@
 {
-	"name": "actions-shells",
+	"name": "@kjanat/actions-shells",
 	"version": "0.1.0",
-	"private": true,
 	"description": "More shells for 'run:'. Additional executable languages for GitHub Actions steps",
 	"repository": "kjanat/actions-shells",
 	"license": "MIT",
@@ -14,8 +13,10 @@
 	},
 	"bin": {
 		"actions-shell": "./cli.mjs",
-		"actions-shells": "./cli.mjs"
+		"actions-shells": "./cli.mjs",
+		"setup-actions-shells": "./setup.mjs"
 	},
+	"files": ["/*.mjs", "/CHANGELOG.md", "/SHA256SUMS"],
 	"scripts": {
 		"build": "tsdown",
 		"check": "run -s lint typecheck build test",
@@ -55,5 +56,9 @@
 	},
 	"volta": {
 		"node": "24.20.0"
+	},
+	"publishConfig": {
+		"access": "public",
+		"registry": "https://npm.pkg.github.com"
 	}
 }
