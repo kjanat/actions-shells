@@ -65,7 +65,15 @@ const runCommand = (id: string, adapter: RuntimeAdapter) =>
 
 const list = command('list')
 	.description('List runtimes and aliases')
-	.action(({ out }) => out.log(listText()));
+	.action(({ out }) => {
+		if (out.jsonMode) {
+			out.json(
+				allRuntimes().map((a) => ({ name: a.name, title: a.title, command: a.command, aliases: aliasesFor(a.name) })),
+			);
+			return;
+		}
+		out.log(listText());
+	});
 
 const describe = command('describe')
 	.description('Show how a runtime is invoked')
@@ -75,6 +83,22 @@ const describe = command('describe')
 		const { input, extension } = describeInput(adapter);
 		const key = envKey(adapter.name);
 		const example = adapter.args('{0}', []).join(' ');
+		if (out.jsonMode) {
+			out.json({
+				runtime: adapter.name,
+				title: adapter.title,
+				aliases: aliasesFor(adapter.name),
+				command: adapter.command,
+				fallbackCommands: adapter.fallbackCommands ?? [],
+				input,
+				extension: adapter.input.kind === 'file' ? (adapter.input.extension ?? null) : null,
+				invocation: `${adapter.command} ${example}`,
+				env: { command: `ACTIONS_SHELL_${key}_COMMAND`, args: `ACTIONS_SHELL_${key}_ARGS` },
+				install: adapter.install ?? null,
+				notes: adapter.notes ?? null,
+			});
+			return;
+		}
 		const lines = [
 			`runtime:            ${adapter.name}`,
 			`title:              ${adapter.title}`,
@@ -100,7 +124,8 @@ const doctorCommand = command('doctor')
 		if (args.runtime) {
 			const adapter = runtimeOrThrow(args.runtime);
 			const report = doctor(adapter);
-			out.log(formatReport(report));
+			if (out.jsonMode) out.json(report);
+			else out.log(formatReport(report));
 			if (report.status !== 'ready') {
 				if (process.env.GITHUB_ACTIONS === 'true') {
 					out.log(`::warning title=actions-shell::runtime ${adapter.name} is ${report.status} (${report.command})`);
@@ -110,8 +135,12 @@ const doctorCommand = command('doctor')
 			return;
 		}
 		const reports = allRuntimes().map((a) => doctor(a));
-		out.log(reports.map(formatReport).join('\n\n'));
 		const ready = reports.filter((r) => r.status === 'ready').length;
+		if (out.jsonMode) {
+			out.json({ ready, total: reports.length, runtimes: reports });
+			return;
+		}
+		out.log(reports.map(formatReport).join('\n\n'));
 		out.log(`\n${ready}/${reports.length} runtimes ready`);
 	});
 
@@ -119,7 +148,6 @@ let app = cli('actions-shell')
 	.manifest(pkg).links().completions({ as: 'flag' })
 	.version(VERSION)
 	.description(`More shells for ${underline`${dim`run:`}`}`)
-	.builtins({ json: 'off', quiet: 'off' })
 	.command(list)
 	.command(describe)
 	.command(doctorCommand);
