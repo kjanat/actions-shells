@@ -3,7 +3,7 @@
 	"version": "0.1.0",
 	"private": true,
 	"description": "More shells for 'run:'. Additional executable languages for GitHub Actions steps",
-	"repository": "https://github.com/kjanat/actions-shells",
+	"repository": "kjanat/actions-shells",
 	"license": "MIT",
 	"author": "Kaj Kowalski",
 	"type": "module",

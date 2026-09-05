@@ -1,9 +1,11 @@
 import pkg from '#pkg' with { type: 'json' };
+import { packageRepositoryUrl } from '@kjanat/dreamcli';
 import { spawnSync } from 'node:child_process';
+import { env } from 'node:process';
 import { defineConfig, type UserConfig } from 'tsdown';
 
-const version = process.env.ACTIONS_SHELL_VERSION ?? pkg.version;
-const commitSha = process.env.GITHUB_SHA ?? spawnSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).stdout.trim();
+const version = env.ACTIONS_SHELL_VERSION ?? pkg.version;
+const commitSha = env.GITHUB_SHA ?? spawnSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).stdout.trim();
 const buildDate = new Date().toISOString();
 
 const banner = `\
@@ -15,11 +17,11 @@ const banner = `\
   * @gitRef ${commitSha}
   * @buildDate ${buildDate}
   *
-  * @see ${pkg.repository}
+  * @see ${packageRepositoryUrl(pkg)}
   */`;
 
 const common = {
-	outDir: '.',
+	outDir: import.meta.dirname,
 	clean: false,
 	deps: { alwaysBundle: ['@actions/core', /^@kjanat\/dreamcli/, /^ansispeck/] },
 	define: { 'process.env.ACTIONS_SHELL_VERSION_PLACEHOLDER': JSON.stringify(version) },
