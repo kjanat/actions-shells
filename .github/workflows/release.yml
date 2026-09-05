@@ -30,7 +30,8 @@ jobs:
       - parallel:
           - uses: kjanat/runner@6e752d37c4b3de6bda86c89b2f5bc487097425cd # master
           - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
-            with: { runtime: node@24, cache: true }
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with: { node-version: 24, cache: pnpm }
       - name: Validate version
         id: v
         env: { VERSION: "${{ inputs.version }}", PRERELEASE: "${{ inputs.prerelease }}" }
