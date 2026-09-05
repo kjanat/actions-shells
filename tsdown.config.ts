@@ -21,16 +21,9 @@ const banner = `\
 const common = {
 	outDir: '.',
 	clean: false,
-	format: 'esm',
-	fixedExtension: true,
-	platform: 'node',
-	target: 'node24',
-	dts: false,
-	minify: false,
 	deps: { alwaysBundle: ['@actions/core', /^ansispeck/] },
 	define: { 'process.env.ACTIONS_SHELL_VERSION_PLACEHOLDER': JSON.stringify(version) },
 	banner: { js: banner },
-	hash: false,
 } satisfies UserConfig;
 
 export default defineConfig([
