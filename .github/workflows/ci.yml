@@ -13,11 +13,11 @@ jobs:
     name: lint, typecheck and unit
     runs-on: ubuntu-latest
     steps:
-      - uses: &Checkout actions/checkout@v7
+      - uses: &Checkout actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - parallel: &PnpmRunner
-          - uses: pnpm/action-setup@v6
-          - uses: kjanat/runner@master
-      - uses: &Node actions/setup-node@v7
+          - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
+          - uses: kjanat/runner@6e752d37c4b3de6bda86c89b2f5bc487097425cd # master
+      - uses: &Node actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with: &PnpmCache { node-version: 24, cache: pnpm }
       - run: runner i -pf lint typecheck build test:unit release:assemble
 
@@ -33,11 +33,11 @@ jobs:
       - run: runner i -f build
 
       # runtimes (this action does not install any of these on purpose)
-      - uses: &RustStable dtolnay/rust-toolchain@stable
-      - uses: dtolnay/rust-toolchain@nightly
+      - uses: &RustStable dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+      - uses: dtolnay/rust-toolchain@be39649afda95dbf70f87cce95f68b8d5797b296 # nightly
       - run: rustup default stable
         shell: bash
-      - uses: actions/cache@v6
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: |
             ~/.cargo/registry
@@ -45,32 +45,32 @@ jobs:
             ~/Library/Caches/rust-script
             ~\AppData\Local\rust-script
           key: "rust-script-${{ runner.os }}-${{ hashFiles('.github/workflows/ci.yml') }}"
-      - uses: &TaikiE taiki-e/install-action@v2
+      - uses: &TaikiE taiki-e/install-action@5bf6ce016fd2e72eefc647cbca1e4213f65955b8 # v2
         with: &RustScript { tool: rust-script }
-      - uses: actions/setup-go@v7
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with: { go-version: stable }
-      - uses: denoland/setup-deno@v2
+      - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2
         with: { deno-version: v2.x }
-      - uses: oven-sh/setup-bun@v2
-      - uses: actions/setup-dotnet@v6
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
         with: { dotnet-version: 10.0.x }
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with: { python-version: "3.x" }
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1
         with: { ruby-version: "3.4" }
-      - uses: shivammathur/setup-php@v2
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
         with: { php-version: "8.4" }
-      - uses: julia-actions/setup-julia@v3
+      - uses: julia-actions/setup-julia@fa02766e078afaaf09b14210362cee14137e6a32 # v3
         with: { version: "1" }
-      - uses: r-lib/actions/setup-r@v2
+      - uses: r-lib/actions/setup-r@465b7d8e732ca3921382b1674c59bada9cbf3399 # v2
         with: { use-public-rspm: true }
-      - uses: fwilhe2/setup-kotlin@main
-      - uses: shogo82148/actions-setup-perl@v1
+      - uses: fwilhe2/setup-kotlin@74982ab1a6e647402f7ad39aba2ba10f3a694c54 # main
+      - uses: shogo82148/actions-setup-perl@53e33bb27be492a926eee378e8a5f7ff6618b061 # v1
         with: { perl-version: "5" }
 
-      - uses: leafo/gh-actions-lua@v13
+      - uses: leafo/gh-actions-lua@6919171ccf181b826f44b9bca76307b577217377 # v13
         if: runner.os != 'Windows'
-      - uses: swift-actions/setup-swift@v3
+      - uses: swift-actions/setup-swift@364295d9c23900ce04d4e5cc708387921b4e50f9 # v3
         if: runner.os == 'Linux'
 
       # integration tests spawn cli.js against every runtime found on PATH

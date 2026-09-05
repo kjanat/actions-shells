@@ -26,11 +26,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - parallel:
-          - uses: actions/checkout@v7
+          - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
             with: { ref: master, fetch-depth: 0 }
-          - uses: actions/setup-node@v7
+          - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
             with: { node-version: 24, package-manager-cache: false }
-          - uses: kjanat/runner@master
+          - uses: kjanat/runner@6e752d37c4b3de6bda86c89b2f5bc487097425cd # master
       - name: Validate version
         id: v
         env: { VERSION: "${{ inputs.version }}", PRERELEASE: "${{ inputs.prerelease }}" }
@@ -50,7 +50,7 @@ jobs:
           } >> "${GITHUB_OUTPUT}"
           echo "ACTIONS_SHELL_VERSION=${VERSION}" >> "${GITHUB_ENV}"
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
       - run: runner i -pf lint typecheck
       - run: run build
         env: { ACTIONS_SHELL_VERSION: "${{ steps.v.outputs.version }}" }
@@ -64,7 +64,7 @@ jobs:
         run: sha256sum cli.js setup.js action.yml > SHA256SUMS && cat SHA256SUMS
 
       - name: Attest build provenance
-        uses: actions/attest-build-provenance@v4
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
         with:
           subject-path: |
             release/cli.js
@@ -110,7 +110,7 @@ jobs:
           cp release/SHA256SUMS release/cli.js release/setup.js .
 
       - name: GitHub Release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3
         with:
           tag_name: v${{ steps.v.outputs.version }}
           name: v${{ steps.v.outputs.version }}
