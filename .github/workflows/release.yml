@@ -62,8 +62,8 @@ jobs:
         run: sha256sum cli.mjs setup.mjs action.yml | tee SHA256SUMS release/SHA256SUMS
 
       - name: Publish to GitHub Packages
-        env: { NODE_AUTH_TOKEN: "${{ github.token }}" }
-        run: env "pnpm_config_//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" pnpm publish --no-git-checks
+        env: { "pnpm_config_//npm.pkg.github.com/:_authToken": "${{ github.token }}" }
+        run: pnpm publish --no-git-checks
 
       - name: Attest build provenance
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
