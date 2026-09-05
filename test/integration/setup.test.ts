@@ -36,7 +36,7 @@ describe('setup action', () => {
 			expect(existsSync(path.join(binDir, 'actions-shell.cmd'))).toBe(true);
 			expect(existsSync(path.join(binDir, 'actions-shells'))).toBe(true);
 			expect(existsSync(path.join(binDir, 'actions-shells.cmd'))).toBe(true);
-			expect(readFileSync(ghEnv, 'utf8')).toMatch(/^ACTIONS_SHELL_CLI<<actions-shell_[0-9a-f-]+\n.*cli\.mjs\n/);
+			expect(readFileSync(ghEnv, 'utf8')).toMatch(/^ACTIONS_SHELL_CLI<<actions-shell_[0-9a-f-]+\r?\n.*cli\.mjs\r?\n/);
 			expect(readFileSync(ghOut, 'utf8')).toContain('bin-dir<<');
 
 			const script = path.join(dir, 'step');

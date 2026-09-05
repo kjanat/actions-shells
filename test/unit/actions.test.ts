@@ -45,10 +45,10 @@ describe('actions', () => {
 		setOutput('cli', '/c.mjs');
 		expect(process.env['FOO']).toBe('bar\nbaz');
 		expect(readFileSync(process.env['GITHUB_ENV'] as string, 'utf8')).toMatch(
-			/^FOO<<(actions-shell_[0-9a-f-]+)\nbar\nbaz\n\1\n$/,
+			/^FOO<<(actions-shell_[0-9a-f-]+)\r?\nbar\nbaz\r?\n\1\r?\n$/,
 		);
 		expect(readFileSync(process.env['GITHUB_OUTPUT'] as string, 'utf8')).toMatch(
-			/^cli<<(actions-shell_[0-9a-f-]+)\n\/c\.mjs\n\1\n$/,
+			/^cli<<(actions-shell_[0-9a-f-]+)\r?\n\/c\.mjs\r?\n\1\r?\n$/,
 		);
 	});
 });
