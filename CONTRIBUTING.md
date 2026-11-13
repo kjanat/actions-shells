@@ -20,9 +20,12 @@ Add one entry to `adapters` in `src/runtimes/index.ts`:
 - `input`: `{ kind: "file" }` when the runtime accepts an extensionless path, or `{ kind: "file", extension: ".ext" }` when it needs one (a sibling file is created next to GitHub's temp file and removed afterwards).
 - `args(path, userArgs)`: put `userArgs` before the path so `shell: actions-shell x --flag {0}` works.
 - `compile` only when the runtime's "run" front-end hides exit codes (see `go`).
+- `prepare` when the runtime needs a generated package or commands before execution (see `cross`). Return the prepared path, prerequisite stages, environment, and cleanup callback. `requirements` supplies the tools checked by `doctor`; `platforms` bounds supported hosts. The shared runner handles stage failure, exit codes, and cancellation.
 - Add a case to `test/integration/cli.test.ts`, a setup action to `ci.yml`, and a row to the README table.
 
 The adapter must not rewrite the user's source. If a runtime needs `fn main()`, users write it.
+
+The Cross adapter delegates script preparation to rust-script. Its container tests are opt-in locally: `ACTIONS_SHELL_TEST_CROSS=1 pnpm exec vitest run test/integration/cross.test.ts`. They require Linux, rustup, rust-script, Cross, and a working local Docker or Podman engine. CI runs them for ARM64 GNU and x86-64 musl.
 
 ## Branching and releases
 

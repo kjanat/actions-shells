@@ -1,5 +1,5 @@
 import pkg from '#pkg' with { type: 'json' };
-import { packageRepositoryUrl } from 'dreamcli';
+import { packageRepositoryUrl } from 'dreamcli/config';
 import { spawnSync } from 'node:child_process';
 import { env } from 'node:process';
 import { defineConfig } from 'tsdown';
@@ -23,9 +23,11 @@ const banner = `\
 const common = {
 	outDir: import.meta.dirname,
 	clean: false,
+	target: 'node24',
 	define: { 'process.env.ACTIONS_SHELL_VERSION_PLACEHOLDER': JSON.stringify(version) },
 	banner: { js: banner },
 	minify: true,
+	outputOptions: { codeSplitting: false },
 } satisfies import('tsdown').UserConfig;
 
 export default defineConfig([
