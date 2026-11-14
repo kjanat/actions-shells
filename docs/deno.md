@@ -22,7 +22,7 @@ The default invocation grants all Deno permissions through `--allow-all`. Treat 
 
 Put `deno run` flags before `{0}`. For example, `shell: actions-shell deno --no-check {0}` explicitly skips type checking. The adapter places your flags after `--allow-all --ext=ts` and before the step file.
 
-The adapter always supplies `--allow-all`. Adding a narrower `--allow-net` or another `--allow-*` flag does not remove that argument; use Deno's applicable deny flags when you need to restrict a permission.
+The adapter always supplies `--allow-all`. Adding a narrower `--allow-net` or another `--allow-*` flag leaves that permission grant in place. Deny flags restrict the corresponding Deno APIs, but other permissions remain enabled. For example, `--deny-read` blocks direct file reads while subprocesses and FFI can still access files. Add `--deny-run` and `--deny-ffi` alongside the relevant deny flags to block those paths, as in `shell: actions-shell deno --deny-read --deny-run --deny-ffi {0}`. Other permissions granted by `--allow-all` remain enabled.
 
 The source file lives in the runner's temporary directory. Relative module imports resolve from that file, so use explicit module URLs or paths suited to its location.
 

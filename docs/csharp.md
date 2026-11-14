@@ -1,7 +1,7 @@
 # C#
 
 ```yaml
-- shell: actions-shell csharp {0}
+- shell: actions-shell csharp --file {0}
   run: |
     Console.WriteLine("hello from C#");
 ```
@@ -14,9 +14,11 @@ Install the .NET SDK version 10 or newer, for example with `actions/setup-dotnet
 
 ## Invocation and flags
 
-The adapter prepares a sibling `.cs` file and runs `dotnet run --disable-build-servers [flags] <script.cs>`. It uses .NET's file-based app support. Top-level statements work. The alias `cs` selects this adapter.
+The adapter prepares a sibling `.cs` file and runs `dotnet run --disable-build-servers [flags] <script.cs>`. Pass `--file` to explicitly select the inline file through .NET's file-based app support. Top-level statements work. The alias `cs` selects this adapter.
 
-Put `dotnet run` options before `{0}`, for example `shell: actions-shell csharp --configuration Release {0}`. The adapter always supplies `--disable-build-servers`.
+Put `dotnet run` options before `{0}`, for example `shell: actions-shell csharp --configuration Release --file {0}`. The adapter always supplies `--disable-build-servers`.
+
+Keep `--file` immediately before `{0}`. Without `--file`, `dotnet run` selects a project in the working directory when one exists. The positional script path then becomes a project argument, so the step may run the project instead of the inline script.
 
 ## Dependencies and constraints
 

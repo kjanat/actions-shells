@@ -21,7 +21,7 @@ Install `actions-shell` as described in [runtime setup](../README.md#runtime-set
 
 `actions-shell uv-python3.11 {0}` runs `uv run --python 3.11 <step-file.py>`. Version selectors have the form `uv-python3.MINOR`.
 
-`actions-shell uv-python {0}` runs `uv run <step-file.py>`. Its alias is `uv`, so `actions-shell uv --python 3.11 {0}` also selects Python 3.11. The adapter creates a sibling `.py` file when needed so uv recognizes the Python script and its inline dependency metadata. It removes the added file after execution and preserves the original contents and the script's exit status.
+`actions-shell uv-python {0}` runs `uv run <step-file.py>`. Its alias is `uv`, so `actions-shell uv --python 3.11 {0}` also selects Python 3.11. The adapter creates a sibling `.py` file when needed so uv recognizes the Python script and its inline dependency metadata. It normally removes the added file after execution. Set `ACTIONS_SHELL_KEEP` to `1` or `true` to preserve it. The adapter preserves the original contents and the script's exit status.
 
 ## Flags and project discovery
 

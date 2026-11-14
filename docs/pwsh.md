@@ -13,7 +13,7 @@ Install `actions-shell` as described in [runtime setup](../README.md#runtime-set
 
 ## Invocation and defaults
 
-`actions-shell pwsh {0}` starts `pwsh -NoLogo -NoProfile -NonInteractive`, then uses `-CommandWithArgs` to run the step file through a wrapper. The adapter creates a sibling `.ps1` file if needed and removes it afterward. It preserves the script contents.
+`actions-shell pwsh {0}` starts `pwsh -NoLogo -NoProfile -NonInteractive`, then uses `-CommandWithArgs` to run the step file through a wrapper. The adapter creates a sibling `.ps1` file if needed and normally removes it afterward. Set `ACTIONS_SHELL_KEEP` to `1` or `true` to preserve it. The adapter preserves the script contents.
 
 The wrapper sets `$ErrorActionPreference = 'Stop'` and `$PSNativeCommandUseErrorActionPreference = $true`. PowerShell errors and failed native commands stop execution. A native command's failure status and an explicit script `exit` status reach the workflow; other caught errors return status 1.
 

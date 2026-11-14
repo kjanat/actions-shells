@@ -22,7 +22,7 @@ Install Rust through rustup with the nightly toolchain. The executable is `cargo
 
 The adapter prepares a sibling `.rs` file and runs `cargo +nightly -Zscript [flags] <script.rs>`. Write a complete `fn main()`.
 
-Put Cargo script options before `{0}`, for example `shell: actions-shell cargo-script --release {0}`. The adapter always supplies `+nightly -Zscript`. This runtime has no aliases.
+Put Cargo script options before `{0}`, for example `shell: actions-shell cargo-script --quiet {0}`. The adapter always supplies `+nightly -Zscript`. This runtime has no aliases.
 
 ## Dependencies and constraints
 
@@ -44,4 +44,4 @@ Declare the edition and dependencies in Cargo's script manifest at the start of 
 
 Cargo resolves and downloads the declared crates. The explicit edition avoids Cargo's default-edition warning. Use [rust-script](./rust-script.md) for the embedded `//!` manifest format.
 
-This backend depends on nightly Cargo's unstable script support. Pin a nightly toolchain in your workflow when repeatable behavior matters. The prepared `.rs` file is removed after execution unless `ACTIONS_SHELL_KEEP=1` is set.
+This backend depends on nightly Cargo's unstable script support. The adapter always selects the toolchain named `nightly`. A dated nightly in `rust-toolchain.toml` or a rustup directory override does not select this adapter's toolchain. The adapter currently has no option to choose a dated nightly. The prepared `.rs` file is removed after execution unless `ACTIONS_SHELL_KEEP=1` is set.

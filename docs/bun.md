@@ -14,7 +14,7 @@ Install `actions-shell` as described in [runtime setup](../README.md#runtime-set
 
 ## Invocation and defaults
 
-`actions-shell bun {0}` runs `bun run <step-file.ts>`. The adapter creates a sibling `.ts` file when the step file lacks that extension, so Bun selects its TypeScript loader. It preserves the source contents, removes the added file after execution, and returns Bun's exit status.
+`actions-shell bun {0}` runs `bun run <step-file.ts>`. The adapter creates a sibling `.ts` file when the step file lacks that extension, so Bun selects its TypeScript loader. It preserves the source contents and returns Bun's exit status. It normally removes the added file after execution. Set `ACTIONS_SHELL_KEEP` to `1` or `true` to preserve it.
 
 The canonical name is `bun`; it has no aliases. The `ts` and `typescript` aliases select [Deno](./deno.md).
 
