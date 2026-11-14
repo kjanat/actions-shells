@@ -17,7 +17,7 @@ jobs:
       - uses: taiki-e/install-action@v2
         with: { tool: rust-script }
 
-      - uses: kjanat/actions-shells@v0.1.0
+      - uses: kjanat/actions-shells@v0.2.1
 
       - run: println!("hello, Actions");
 
@@ -114,7 +114,7 @@ Use the tool versions already declared by your project. For a repository with `m
 ```yaml
 - uses: actions/checkout@v7
 - uses: jdx/mise-action@v5
-- uses: kjanat/actions-shells@v0.1.0
+- uses: kjanat/actions-shells@v0.2.1
   with: { doctor: true, runtimes: "kotlin, lua" }
 ```
 
@@ -155,7 +155,7 @@ Per step:
 ```yaml
 - uses: actions/setup-go@v7
   with: { go-version: stable }
-- uses: kjanat/actions-shells@v0.1.0
+- uses: kjanat/actions-shells@v0.2.1
 
 - shell: actions-shell go {0}
   run: |
@@ -170,7 +170,7 @@ Job-wide:
 defaults: { run: { shell: "actions-shell deno {0}" } }
 steps:
   - uses: denoland/setup-deno@v2
-  - uses: kjanat/actions-shells@v0.1.0 # a `uses:` step, so the default shell does not apply to it
+  - uses: kjanat/actions-shells@v0.2.1 # a `uses:` step, so the default shell does not apply to it
   - run: console.log(Deno.version.deno);
 ```
 

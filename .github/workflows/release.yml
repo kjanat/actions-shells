@@ -71,37 +71,33 @@ jobs:
       - name: Pack npm package
         id: package
         run: |
-          npm pack --ignore-scripts --json --pack-destination "${RUNNER_TEMP}" > "${RUNNER_TEMP}/npm-pack.json"
+          pnpm pack --out "${RUNNER_TEMP}/actions-shells.tgz"
           node --input-type=module <<'JS'
+          import { createHash } from 'node:crypto';
           import { appendFileSync, readFileSync } from 'node:fs';
           import { join } from 'node:path';
-          const [pkg] = Object.values(JSON.parse(readFileSync(join(process.env.RUNNER_TEMP, 'npm-pack.json'), 'utf8')));
-          appendFileSync(process.env.GITHUB_OUTPUT, `tarball=${join(process.env.RUNNER_TEMP, pkg.filename)}\nintegrity=${pkg.integrity}\n`);
+          const tarball = join(process.env.RUNNER_TEMP, 'actions-shells.tgz');
+          const integrity = `sha512-${createHash('sha512').update(readFileSync(tarball)).digest('base64')}`;
+          appendFileSync(process.env.GITHUB_OUTPUT, `tarball=${tarball}\nintegrity=${integrity}\n`);
           JS
-
-      - name: npm credentials
-        id: npm_credentials
-        uses: kjanat/beepboop/actions/credentials@v1
-        with:
-          execution-id: ${{ steps.release.outputs.execution-id }}
-          aliases: '["npm-token"]'
 
       - name: Publish to npmjs.org
         id: npm
+        working-directory: ${{ runner.temp }}
         env:
-          "npm_config_//registry.npmjs.org/:_authToken": ${{ fromJSON(steps.npm_credentials.outputs.values || '{}')['npm-token'] }}
           TARBALL: ${{ steps.package.outputs.tarball }}
           CHANNEL: ${{ steps.v.outputs.channel }}
-        run: npm publish "${TARBALL}" --registry=https://registry.npmjs.org --access=public --provenance --tag="${CHANNEL}"
+        run: pnpm publish "${TARBALL}" --registry=https://registry.npmjs.org --access=public --tag="${CHANNEL}"
 
       - name: Publish to GitHub Packages
         id: github_packages
+        working-directory: ${{ runner.temp }}
         if: ${{ !cancelled() && steps.package.outcome == 'success' }}
         env:
           "npm_config_//npm.pkg.github.com/:_authToken": ${{ github.token }}
           TARBALL: ${{ steps.package.outputs.tarball }}
           CHANNEL: ${{ steps.v.outputs.channel }}
-        run: npm publish "${TARBALL}" --registry=https://npm.pkg.github.com --access=public --tag="${CHANNEL}"
+        run: pnpm publish "${TARBALL}" --registry=https://npm.pkg.github.com --access=public --tag="${CHANNEL}"
 
       - name: Attest build provenance
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4

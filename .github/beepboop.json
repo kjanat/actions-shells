@@ -25,10 +25,7 @@
             "workflow:action-release"
           ]
         }
-      },
-      "credentials": [
-        "npm-token"
-      ]
+      }
     }
   },
   "managers": [
