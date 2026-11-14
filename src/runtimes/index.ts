@@ -91,7 +91,7 @@ export const adapters: readonly RuntimeAdapter[] = [
 		title: 'C# (dotnet run file-based app)',
 		command: 'dotnet',
 		input: file('.cs'),
-		args: (path, userArgs) => ['run', ...userArgs, path],
+		args: (path, userArgs) => ['run', '--disable-build-servers', ...userArgs, path],
 		install: 'actions/setup-dotnet (10.x or newer)',
 		notes: 'Top-level statements and `#:package` directives are supported by .NET 10+.',
 	},

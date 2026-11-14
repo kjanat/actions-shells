@@ -135,6 +135,9 @@ describe('actions-shell <runtime> <file>', () => {
 			const r = runCli([c.runtime, f]);
 			expect(r.stdout.trim().split(/\r?\n/).at(-1), r.stderr).toBe(c.stdout);
 			expect(r.status).toBe(c.exit);
+			if (c.runtime === 'csharp') {
+				expect(r.stdout + r.stderr).not.toMatch(/Warning:.*Compiler server/);
+			}
 			// no leftovers next to the temp file
 			const leftovers = ['', '.cs', '.fsx', '.go', '.go.bin', '.go.exe', '.main.kts', '.rs', '.swift', '.ts']
 				.map((e) => f + e)
