@@ -58,6 +58,7 @@ That is the whole job. `actions-shells` does **not**:
 
 | `shell:`                                    | Runs                                  | Setup                                                                                   | Notes                                                                                              |
 | ------------------------------------------- | ------------------------------------- | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `actions-shell pwsh {0}` | `pwsh -NoLogo -NoProfile -NonInteractive` | PowerShell 7.4+ | Sets error preferences at invocation time; stops on PowerShell errors and failed native commands. |
 | `actions-shell bash {0}` | `bash --noprofile --norc -euo pipefail` | Bash on the runner | Stops on unhandled failures, unset variables and failing pipelines. Pass `+u` to allow unset variables. |
 | `actions-shell rust-script {0}`             | [rust-script]                         | [Rust and script tools](#rust-and-script-tools)                                         | Bare statements, `fn main()`, and embedded Cargo manifests. rust-script caches compiled artifacts. |
 | `actions-shell cross --target <triple> {0}` | `rust-script --package` + `cross run` | [Cross guide](https://github.com/kjanat/actions-shells/blob/master/docs/cross.md)       | Inline Rust on another target. Linux host and local Docker or Podman required. Unreleased.         |

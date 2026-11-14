@@ -1,3 +1,4 @@
+import { pwsh } from '#runtimes/pwsh';
 import { cross } from '#runtimes/cross';
 import { rustScript } from '#runtimes/rust-script';
 import type { RuntimeAdapter } from '#types';
@@ -42,6 +43,8 @@ export const adapters: readonly RuntimeAdapter[] = [
 		install: 'Bash on the runner, including Git for Windows',
 		notes: 'Enables errexit, nounset and pipefail. Pass +u or +e to opt out; normal Bash conditional rules apply.',
 	},
+	pwsh,
+
 	// JavaScript family
 	{
 		name: 'node',

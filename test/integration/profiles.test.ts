@@ -79,3 +79,40 @@ describe.skipIf(!available('bash'))('Bash profile', () => {
 		expect(result.stdout).toBe('ok');
 	});
 });
+
+
+describe.skipIf(!available('pwsh'))('PowerShell profile', () => {
+	it.each(['Write-Error "broken"', 'throw "broken"'])('stops after %s', failure => {
+		const result = run('pwsh', `${failure}\nWrite-Output "unreachable"`);
+		expect(result.status).toBe(1);
+		expect(result.stderr).toContain('broken');
+		expect(result.stdout).not.toContain('unreachable');
+	});
+
+	it('preserves explicit script exits and handles quoted paths', () => {
+		const result = run('pwsh', 'Write-Output "hello"; exit 23');
+		expect(result.status, result.stderr).toBe(23);
+		expect(result.stdout.trim()).toBe('hello');
+	});
+
+	it('stops on native failures and preserves their exit status', () => {
+		const node = process.execPath.replaceAll("'", "''");
+		const result = run('pwsh', `& '${node}' -e 'process.exit(37)'\nWrite-Output "unreachable"`);
+		expect(result.status, result.stderr).toBe(37);
+		expect(result.stdout).not.toContain('unreachable');
+	});
+
+	it('succeeds after successful PowerShell and native commands', () => {
+		const node = process.execPath.replaceAll("'", "''");
+		const result = run('pwsh', `& '${node}' -e 'process.exit(0)'\nWrite-Output "ok"`);
+		expect(result.status, result.stderr).toBe(0);
+		expect(result.stdout.trim()).toBe('ok');
+	});
+
+	it('allows a script to handle an expected native failure', () => {
+		const node = process.execPath.replaceAll("'", "''");
+		const result = run('pwsh', `try { & '${node}' -e 'process.exit(9)' } catch { Write-Output "handled" }; exit 0`);
+		expect(result.status, result.stderr).toBe(0);
+		expect(result.stdout.trim()).toBe('handled');
+	});
+});
