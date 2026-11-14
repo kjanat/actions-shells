@@ -91,10 +91,10 @@ Aliases: `rust`→rust-script, `js`/`javascript`→node, `ts`/`typescript`→den
 
 ## Python through uv
 
-Pass uv options before `{0}`, or declare dependencies in the script:
+Select Python with the runtime shorthand and declare dependencies in the script:
 
 ```yaml
-- shell: actions-shell uv --python 3.11 {0}
+- shell: actions-shell uv-python3.11 {0}
   run: |
     # /// script
     # dependencies = ["idna==3.11"]
