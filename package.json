@@ -35,7 +35,7 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"devDependencies": {
-		"@kjanat/fmt": "^0.60.6",
+		"@kjanat/fmt": "^0.62.0",
 		"@types/node": "^26.6.6",
 		"ansispeck": "^0.4.3",
 		"biome": "npm:@biomejs/biome@^2.6.7",
