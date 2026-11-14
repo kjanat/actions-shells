@@ -159,6 +159,10 @@ for (const adapter of allRuntimes()) {
 }
 
 const raw = process.argv.slice(2);
+const selected = resolveRuntime(raw[0] ?? '');
+if (selected && !allRuntimes().some((adapter) => adapter.name === selected.name)) {
+	app = app.command(runCommand(raw[0] as string, selected));
+}
 const last = raw.at(-1);
 const runtimeArgs = resolveRuntime(raw[0] ?? '')?.name === 'cross'
 	? raw.slice(1)

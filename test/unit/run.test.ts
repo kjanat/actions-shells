@@ -12,6 +12,16 @@ const get = (n: string) => {
 };
 
 describe('resolveCommand', () => {
+	it('selects a compatible fallback and rejects a mismatched override', () => {
+		const adapter = {
+			...get('python3.11'), command: '/missing/python',
+			fallbackCommands: [process.execPath], requiredVersion: /^v\d+\./,
+		};
+		expect(resolveCommand(adapter).resolved).toBe(process.execPath);
+		expect(resolveCommand(get('python3.11'), {
+			PATH: '', ACTIONS_SHELL_PYTHON3_11_COMMAND: process.execPath,
+		}).resolved).toBeUndefined();
+	});
 	it('falls back to alternative executables', () => {
 		const python = get('python');
 		const r = resolveCommand(python);
