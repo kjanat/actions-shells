@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { aliasesFor, allRuntimes, applyEnvOverrides, envKey, resolveRuntime, runtimeNames, splitArgs } from '#registry';
 import { aliases } from '#runtimes';
 import { describe, expect, it } from 'vitest';
@@ -30,12 +31,13 @@ describe('registry', () => {
 	});
 
 	it('places the script path last for every file-based adapter', () => {
+		const script = path.resolve('/tmp/script');
 		for (const a of allRuntimes()) {
 			if (a.input.kind !== 'file') continue;
 			const args = a.compile
-				? a.compile('/tmp/script', ['--flag']).args
-				: a.args('/tmp/script', ['--flag']);
-			expect(args.at(-1)).toBe('/tmp/script');
+				? a.compile(script, ['--flag']).args
+				: a.args(script, ['--flag']);
+			expect(args.at(-1)).toBe(script);
 			expect(args).toContain('--flag');
 			expect(args.indexOf('--flag')).toBeLessThan(args.length - 1);
 		}

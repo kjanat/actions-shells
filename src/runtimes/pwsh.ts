@@ -1,4 +1,5 @@
 import type { RuntimeAdapter } from '#types';
+import { resolve } from 'node:path';
 
 const versionCheck = "if ($PSVersionTable.PSVersion -lt [version]'7.4') { throw 'actions-shell pwsh requires PowerShell 7.4 or newer' }";
 const launch = `${versionCheck};
@@ -23,7 +24,7 @@ export const pwsh: RuntimeAdapter = {
 	command: 'pwsh',
 	input: { kind: 'file', extension: '.ps1' },
 	args: (path, userArgs) => [
-		'-NoLogo', '-NoProfile', '-NonInteractive', ...userArgs, '-CommandWithArgs', launch, path,
+		'-NoLogo', '-NoProfile', '-NonInteractive', ...userArgs, '-CommandWithArgs', launch, resolve(path),
 	],
 	versionArgs: ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', `${versionCheck}; $PSVersionTable.PSVersion.ToString()`],
 	install: 'PowerShell 7.4 or newer on the runner',

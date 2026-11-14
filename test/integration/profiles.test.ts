@@ -16,11 +16,11 @@ function available(runtime: string): boolean {
 	return !!adapter && !!resolveCommand(adapter).resolved;
 }
 
-function run(runtime: string, source: string, args: string[] = []) {
+function run(runtime: string, source: string, args: string[] = [], relative = false) {
 	const script = path.join(dir, 'script');
 	writeFileSync(script, source);
-	const result = spawnSync(process.execPath, [cli, runtime, ...args, script], {
-		encoding: 'utf8', timeout: 15_000,
+	const result = spawnSync(process.execPath, [cli, runtime, ...args, relative ? path.basename(script) : script], {
+		cwd: dir, encoding: 'utf8', timeout: 15_000,
 	});
 	expect(result.error).toBeUndefined();
 	expect(readFileSync(script, 'utf8')).toBe(source);
@@ -82,6 +82,11 @@ describe.skipIf(!available('bash'))('Bash profile', () => {
 
 
 describe.skipIf(!available('pwsh'))('PowerShell profile', () => {
+	it('runs a bare filename from the working directory', () => {
+		const result = run('pwsh', 'Write-Output "ok"', [], true);
+		expect(result.status, result.stderr).toBe(0);
+		expect(result.stdout.trim()).toBe('ok');
+	});
 	it.each(['Write-Error "broken"', 'throw "broken"'])('stops after %s', failure => {
 		const result = run('pwsh', `${failure}\nWrite-Output "unreachable"`);
 		expect(result.status).toBe(1);
