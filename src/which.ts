@@ -17,8 +17,9 @@ function isExecutableFile(p: string): boolean {
 /** Locate `command` on PATH (honouring PATHEXT on Windows). Absolute/relative paths are checked directly. */
 export function which(command: string, env: NodeJS.ProcessEnv = process.env): string | undefined {
 	const exts = isWindows ? (env.PATHEXT ?? '.EXE;.CMD;.BAT;.COM').split(';').filter(Boolean) : [''];
+	const executableExts = ['.exe', '.com', '.cmd', '.bat', ...exts.map((ext) => ext.toLowerCase())];
 	const candidates = (name: string) =>
-		isWindows && exts.some((ext) => ext.toLowerCase() === path.extname(name).toLowerCase())
+		isWindows && executableExts.includes(path.extname(name).toLowerCase())
 			? [name]
 			: exts.map((ext) => name + ext);
 
