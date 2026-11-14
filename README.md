@@ -56,6 +56,8 @@ That is the whole job. `actions-shells` does **not**:
 
 ## Runtimes
 
+See the [runtime guides](docs/README.md) for examples, arguments, and prerequisites for each supported shell.
+
 | `shell:`                                    | Runs                                          | Setup                                                                                    | Notes                                                                                                   |
 | ------------------------------------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | `actions-shell pwsh {0}`                    | `pwsh -NoLogo -NoProfile -NonInteractive`     | PowerShell 7.4+                                                                          | Sets error preferences at invocation time; stops on PowerShell errors and failed native commands.       |
@@ -67,7 +69,7 @@ That is the whole job. `actions-shells` does **not**:
 | `actions-shell go {0}`                      | `go build` + exec                             | mise `go`, or [setup-go@v7](https://github.com/actions/setup-go)                         | `package main` + `func main()`. Direct execution preserves `os.Exit(n)`.                                |
 | `actions-shell deno {0}`                    | `deno run --allow-all --ext=ts`               | mise `deno`, or [setup-deno@v2](https://github.com/denoland/setup-deno)                  | TypeScript with all permissions enabled by the adapter.                                                 |
 | `actions-shell bun {0}`                     | `bun run`                                     | mise `bun`, or [setup-bun@v2](https://github.com/oven-sh/setup-bun)                      | TypeScript; input gets a `.ts` extension.                                                               |
-| `actions-shell node {0}`                    | `node`                                        | mise `node`, or [setup-node@v7](https://github.com/actions/setup-node)                   | CommonJS JavaScript.                                                                                    |
+| `actions-shell node {0}`                    | `node`                                        | mise `node`, or [setup-node@v7](https://github.com/actions/setup-node)                   | JavaScript. Node.js selects the module type.                                                            |
 | `actions-shell kotlin {0}`                  | `kotlinc -script`                             | [mise: Java + Kotlin](#runtime-setup)                                                    | Requires a JDK as well as Kotlin. `.main.kts` supports `@file:DependsOn`.                               |
 | `actions-shell swift {0}`                   | `swift`                                       | Swift supplied by a macOS runner, or [mise Swift](https://mise.jdx.dev/lang/swift.html)  | Top-level code. CI exercises the macOS runner's installed Swift.                                        |
 | `actions-shell csharp {0}`                  | `dotnet run file.cs`                          | mise `dotnet`, or [setup-dotnet@v6](https://github.com/actions/setup-dotnet), SDK 10+    | Top-level statements and `#:package` directives.                                                        |
