@@ -3,7 +3,7 @@
  * machine. Missing runtimes are skipped, not failed — CI installs the full set.
  */
 
-import { resolveRuntime } from '#registry';
+import { aliasesFor, resolveRuntime } from '#registry';
 import { resolveCommand } from '#run';
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -151,22 +151,41 @@ describe('actions-shell <runtime> <file>', () => {
 		expect(existsSync(`${f}.ts`)).toBe(true);
 	});
 
-	it('passes runtime args placed before the file', () => {
+	it.each([['--no-warnings', '--'], ['--', '--no-warnings']])('passes runtime args %j before the file', (...args) => {
 		const f = path.join(dir, 'args');
 		writeFileSync(f, "console.log(process.execArgv.join(','))");
-		const r = runCli(['node', '--no-warnings', '--', f]);
+		const r = runCli(['node', ...args, f]);
 		expect(r.stdout.trim()).toBe('--no-warnings');
 		expect(r.status).toBe(0);
 	});
 
-	it('preserves runtime separators and the arguments following them', () => {
-		const capture = path.join(dir, 'capture.cjs');
-		writeFileSync(capture, 'console.log(JSON.stringify(process.argv.slice(2)))');
-		const args = ['--', '--help', 'greeting', '--', 'script'];
-		const r = runCli(['node', ...args], { ACTIONS_SHELL_NODE_ARGS: `"${capture}"` });
-		expect(r.status, r.stderr).toBe(0);
-		expect(JSON.parse(r.stdout)).toEqual(args);
-	});
+	it.skipIf(process.platform !== 'linux').each(['cross', ...aliasesFor('cross')])(
+		'preserves %s program separators and arguments',
+		(runtime) => {
+			const script = path.join(dir, 'cross-script');
+			writeFileSync(script, 'println!("hello");');
+			const helper = path.join(dir, 'prepare.cjs');
+			writeFileSync(helper, '');
+			const capture = path.join(dir, 'capture.cjs');
+			writeFileSync(capture, 'console.log(JSON.stringify(process.argv.slice(2)))');
+			const args = ['--', '--help', 'greeting', '--', ''];
+			const r = runCli([runtime, '--target=test-target', ...args, script], {
+				ACTIONS_SHELL_CROSS_COMMAND: process.execPath,
+				ACTIONS_SHELL_CROSS_ARGS: `"${capture}"`,
+				ACTIONS_SHELL_RUST_SCRIPT_COMMAND: process.execPath,
+				ACTIONS_SHELL_RUST_SCRIPT_ARGS: `"${helper}"`,
+				ACTIONS_SHELL_CROSS_CONTAINER_ENGINE_COMMAND: process.execPath,
+			});
+			expect(r.status, r.stderr).toBe(0);
+			expect(JSON.parse(r.stdout)).toEqual([
+				'run',
+				'--target=test-target',
+				'--manifest-path',
+				expect.stringMatching(/Cargo\.toml$/),
+				...args,
+			]);
+		},
+	);
 
 	it('fails clearly for unknown and missing runtimes', () => {
 		expect(runCli(['klingon', 'x']).status).toBe(2);
