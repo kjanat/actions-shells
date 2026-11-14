@@ -82,6 +82,10 @@ jobs:
       # the real thing: use the action from this checkout, then `shell:` steps
       - { uses: ./, with: { doctor: true } }
 
+      - name: PowerShell profile
+        shell: actions-shell pwsh {0}
+        run: Write-Output "PowerShell on $($PSVersionTable.Platform)"
+
       - name: bash profile
         shell: actions-shell bash {0}
         run: printf 'Bash on %s\n' "${OSTYPE}"
