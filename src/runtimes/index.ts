@@ -8,6 +8,15 @@ const file = (extension?: string) =>
 const pass = (path: string, userArgs: readonly string[]) => [...userArgs, path];
 
 export const adapters: readonly RuntimeAdapter[] = [
+	{
+		name: 'bash',
+		title: 'Bash',
+		command: 'bash',
+		input: file(),
+		args: (path, userArgs) => ['--noprofile', '--norc', '-euo', 'pipefail', ...userArgs, path],
+		install: 'Bash on the runner, including Git for Windows',
+		notes: 'Enables errexit, nounset and pipefail. Pass +u or +e to opt out; normal Bash conditional rules apply.',
+	},
 	// JavaScript family
 	{
 		name: 'node',

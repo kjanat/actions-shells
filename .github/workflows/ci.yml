@@ -82,6 +82,10 @@ jobs:
       # the real thing: use the action from this checkout, then `shell:` steps
       - { uses: ./, with: { doctor: true } }
 
+      - name: bash profile
+        shell: actions-shell bash {0}
+        run: printf 'Bash on %s\n' "${OSTYPE}"
+
       - name: rust-script
         shell: actions-shell rust-script {0}
         run: println!("Ferris has entered CI on {}", std::env::consts::OS);
