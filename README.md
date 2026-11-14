@@ -230,7 +230,7 @@ Supported. The setup action writes both `actions-shell` (sh) and `actions-shell.
 
 ## Versioning
 
-- `vX.Y.Z` — immutable release tags. Each is an orphan commit containing exactly `README.md`, `LICENSE`, `action.yml`, `cli.mjs`, `setup.mjs` (no source, no `node_modules`, fast to fetch).
+- `vX.Y.Z` — immutable release tags.
 - `vX.Y`, `vX` — floating tags moved to the newest matching release.
 - `master` — source only. **Not usable as `uses:`** (there is nothing built there).
 - Every release ships `cli.mjs`, `setup.mjs` and `action.yml` with [build provenance attestations](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations) and a `SHA256SUMS` file:

@@ -1,22 +1,19 @@
 name: Release
 
-# Source lives on master. A release is an orphan commit containing only
-# README.md, LICENSE, action.yml, cli.mjs and setup.mjs, tagged vX.Y.Z (immutable),
-# with vX.Y and vX moved to point at it. Built files are attested and attached
-# to a GitHub Release.
-
+# Beepboop selects the version and source; this workflow publishes npmjs.org, GitHub Packages
+# and the built Action on the actions branch, then reports both results.
+run-name: ${{ inputs.beepboop_title || github.workflow }}
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: "Version to release (X.Y.Z, no leading v)"
+      beepboop_execution_id:
+        description: Approved Beepboop promotion execution
         required: true
         type: string
-      prerelease:
-        description: "Mark the GitHub Release as a pre-release (floating tags are NOT moved)"
+      beepboop_title:
+        description: Beepboop run title
         required: false
-        type: boolean
-        default: false
+        type: string
 
 permissions: { contents: write, id-token: write, attestations: write, packages: write }
 concurrency: { group: release, cancel-in-progress: false }
@@ -26,34 +23,41 @@ jobs:
   release:
     runs-on: ubuntu-slim
     steps:
-      - uses: kjanat/beepboop/actions/token@0b976fe4c28e3c6e19552191e3cb2b64ce9e8444 # v1
+      - uses: kjanat/beepboop/actions/begin@v1
+        id: release
+        with:
+          execution-id: ${{ inputs.beepboop_execution_id }}
+          stream: actions-shells
+          operation: promote
+      - uses: kjanat/beepboop/actions/token@v1
         id: beepboop
-        with: { permission-contents: write }
+        with:
+          execution-id: ${{ steps.release.outputs.execution-id }}
+          permission-contents: write
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with: { ref: master, fetch-depth: 0, token: "${{ steps.beepboop.outputs.token }}" }
+        with:
+          ref: ${{ fromJSON(steps.release.outputs.context).sourceSha }}
+          fetch-depth: 0
+          token: ${{ steps.beepboop.outputs.token }}
       - parallel:
           - uses: kjanat/runner@26ceb1f678c11e79d1846b7aa5f8d61af7ecdf65 # master
           - uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
             with: { cache: true, install: false }
-      - name: Validate version
+      - name: Release metadata
         id: v
-        env: { VERSION: "${{ inputs.version }}", PRERELEASE: "${{ inputs.prerelease }}" }
+        env: { VERSION: "${{ fromJSON(steps.release.outputs.context).version }}" }
         run: |
-          [[ "${VERSION}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(-[0-9A-Za-z.-]+)?$ ]] || { echo "invalid version: ${VERSION}"; exit 1; }
-          if git ls-remote --exit-code --tags origin "refs/tags/v${VERSION}" >/dev/null; then
-            echo "tag v${VERSION} already exists — release tags are immutable"; exit 1
-          fi
-          [[ -n "${BASH_REMATCH[4]:-}" || "${PRERELEASE}" == "true" ]] && PRERELEASE=true || PRERELEASE=false
-          export PRERELEASE
-          {
-            echo "version=${VERSION}"
-            echo "major=${BASH_REMATCH[1]}"
-            echo "minor=${BASH_REMATCH[2]}"
-            echo "prerelease=${PRERELEASE}"
-          } >> "${GITHUB_OUTPUT}"
+          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
+          [[ "${VERSION}" == *-* ]] && prerelease=true || prerelease=false
+          echo "prerelease=${prerelease}" >> "${GITHUB_OUTPUT}"
+          [[ "${prerelease}" == true ]] && channel=next || channel=latest
+          echo "channel=${channel}" >> "${GITHUB_OUTPUT}"
           echo "ACTIONS_SHELL_VERSION=${VERSION}" >> "${GITHUB_ENV}"
 
       - run: runner i -pf lint typecheck
+      - name: Set package version
+        env: { VERSION: "${{ steps.v.outputs.version }}" }
+        run: pnpm pkg set "version=${VERSION}"
       - run: run build
         env: { ACTIONS_SHELL_VERSION: "${{ steps.v.outputs.version }}" }
       - parallel:
@@ -64,9 +68,40 @@ jobs:
       - name: Checksums
         run: sha256sum cli.mjs setup.mjs action.yml | tee SHA256SUMS release/SHA256SUMS
 
+      - name: Pack npm package
+        id: package
+        run: |
+          npm pack --ignore-scripts --json --pack-destination "${RUNNER_TEMP}" > "${RUNNER_TEMP}/npm-pack.json"
+          node --input-type=module <<'JS'
+          import { appendFileSync, readFileSync } from 'node:fs';
+          import { join } from 'node:path';
+          const [pkg] = Object.values(JSON.parse(readFileSync(join(process.env.RUNNER_TEMP, 'npm-pack.json'), 'utf8')));
+          appendFileSync(process.env.GITHUB_OUTPUT, `tarball=${join(process.env.RUNNER_TEMP, pkg.filename)}\nintegrity=${pkg.integrity}\n`);
+          JS
+
+      - name: npm credentials
+        id: npm_credentials
+        uses: kjanat/beepboop/actions/credentials@v1
+        with:
+          execution-id: ${{ steps.release.outputs.execution-id }}
+          aliases: '["npm-token"]'
+
+      - name: Publish to npmjs.org
+        id: npm
+        env:
+          "npm_config_//registry.npmjs.org/:_authToken": ${{ fromJSON(steps.npm_credentials.outputs.values)['npm-token'] }}
+          TARBALL: ${{ steps.package.outputs.tarball }}
+          CHANNEL: ${{ steps.v.outputs.channel }}
+        run: npm publish "${TARBALL}" --registry=https://registry.npmjs.org --access=public --provenance --tag="${CHANNEL}"
+
       - name: Publish to GitHub Packages
-        env: { "pnpm_config_//npm.pkg.github.com/:_authToken": "${{ github.token }}" }
-        run: pnpm publish --no-git-checks
+        id: github_packages
+        if: ${{ !cancelled() && steps.package.outcome == 'success' }}
+        env:
+          "npm_config_//npm.pkg.github.com/:_authToken": ${{ github.token }}
+          TARBALL: ${{ steps.package.outputs.tarball }}
+          CHANNEL: ${{ steps.v.outputs.channel }}
+        run: npm publish "${TARBALL}" --registry=https://npm.pkg.github.com --access=public --tag="${CHANNEL}"
 
       - name: Attest build provenance
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
@@ -76,33 +111,13 @@ jobs:
             release/setup.mjs
             release/action.yml
 
-      - name: Create orphan release commit and tags
+      - name: Publish Action commit and tags
         id: tag
         env:
           "${{ insert }}": ${{ fromJSON(steps.beepboop.outputs.gitId || '{}') }}
           VERSION: ${{ steps.v.outputs.version }}
-          MAJOR: ${{ steps.v.outputs.major }}
-          MINOR: ${{ steps.v.outputs.minor }}
           PRERELEASE: ${{ steps.v.outputs.prerelease }}
-        run: |
-          # Build a tree from release/ only, using a throwaway index so master's tree is untouched.
-          GIT_INDEX_FILE="$(mktemp -u)"
-          export GIT_INDEX_FILE
-          git --work-tree=release add -A
-          TREE="$(git write-tree)"
-          unset GIT_INDEX_FILE
-
-          HEAD="$(git rev-parse HEAD)"
-          COMMIT="$(git commit-tree "${TREE}" -m "actions-shells v${VERSION}" -m "Built from ${HEAD} on master.")"
-          git tag -a "v${VERSION}" -m "actions-shells v${VERSION}" "${COMMIT}"
-          git push origin "refs/tags/v${VERSION}"
-
-          if [[ "${PRERELEASE}" != "true" ]]; then
-            git tag -f -a "v${MAJOR}.${MINOR}" -m "actions-shells v${MAJOR}.${MINOR} -> v${VERSION}" "${COMMIT}"
-            git tag -f -a "v${MAJOR}" -m "actions-shells v${MAJOR} -> v${VERSION}" "${COMMIT}"
-            git push --force origin "refs/tags/v${MAJOR}.${MINOR}" "refs/tags/v${MAJOR}"
-          fi
-          echo "commit=${COMMIT}" >> "${GITHUB_OUTPUT}"
+        run: bash scripts/publish-action.sh
 
       - name: Package
         env: { VERSION: "${{ steps.v.outputs.version }}" }
@@ -110,6 +125,7 @@ jobs:
           cp release/SHA256SUMS release/cli.mjs release/setup.mjs .
 
       - name: GitHub Release
+        id: github_release
         uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
         with:
           token: ${{ steps.beepboop.outputs.token }}
@@ -123,3 +139,20 @@ jobs:
             cli.mjs
             setup.mjs
             SHA256SUMS
+
+      - name: Report publications
+        if: ${{ always() && steps.release.outcome == 'success' }}
+        uses: kjanat/beepboop/actions/report@v1
+        with:
+          execution-id: ${{ steps.release.outputs.execution-id }}
+          publications: >-
+            [{"id":"pkg:npm/%40kjanat/actions-shells","manager":"npm","name":"@kjanat/actions-shells",
+              "version":"${{ fromJSON(steps.release.outputs.context).version }}",
+              "digest":"${{ steps.package.outputs.integrity }}","channel":"${{ steps.v.outputs.channel }}",
+              "outcome":"${{ steps.npm.outcome == 'success' && 'succeeded' || 'failed' }}","required":true},
+             {"id":"workflow:github-packages","manager":"workflow","name":"github-packages",
+              "version":"${{ fromJSON(steps.release.outputs.context).version }}",
+              "outcome":"${{ steps.github_packages.outcome == 'success' && 'succeeded' || 'failed' }}","required":true},
+             {"id":"workflow:action-release","manager":"workflow","name":"action-release",
+              "version":"${{ fromJSON(steps.release.outputs.context).version }}",
+              "outcome":"${{ steps.tag.outcome == 'success' && steps.github_release.outcome == 'success' && 'succeeded' || 'failed' }}","required":true}]
