@@ -11,7 +11,7 @@ concurrency: { group: "ci-${{ github.ref }}", cancel-in-progress: true }
 jobs:
   check:
     name: lint, typecheck and unit
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: &Checkout actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - parallel: &PnpmRunner
@@ -28,7 +28,7 @@ jobs:
     name: e2e (${{ matrix.os }})
     needs: check
     runs-on: ${{ matrix.os }}
-    strategy: { fail-fast: false, matrix: { os: [ubuntu-latest, macos-latest, windows-latest] } }
+    strategy: { fail-fast: false, matrix: { os: [ubuntu-26.04, macos-latest, windows-latest] } }
     steps:
       - uses: *Checkout
       - parallel: *PnpmRunner
@@ -236,7 +236,7 @@ jobs:
   e2e-job-default:
     name: job-wide default shell
     needs: check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     defaults: { run: { shell: "actions-shell rust-script {0}" } }
     steps:
       - uses: *Checkout
@@ -256,7 +256,7 @@ jobs:
   e2e-cross:
     name: cross (${{ matrix.target }})
     needs: check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix:

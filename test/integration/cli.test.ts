@@ -173,10 +173,12 @@ describe('actions-shell <runtime> <file>', () => {
 			writeFileSync(capture, 'console.log(JSON.stringify(process.argv.slice(2)))');
 			const args = ['--', '--help', 'greeting', '--', ''];
 			const r = runCli([runtime, '--target=test-target', ...args, script], {
+				PATH: '',
 				ACTIONS_SHELL_CROSS_COMMAND: process.execPath,
 				ACTIONS_SHELL_CROSS_ARGS: `"${capture}"`,
 				ACTIONS_SHELL_RUST_SCRIPT_COMMAND: process.execPath,
 				ACTIONS_SHELL_RUST_SCRIPT_ARGS: `"${helper}"`,
+				ACTIONS_SHELL_RUSTUP_COMMAND: process.execPath,
 				ACTIONS_SHELL_CROSS_CONTAINER_ENGINE_COMMAND: process.execPath,
 			});
 			expect(r.status, r.stderr).toBe(0);

@@ -21,7 +21,7 @@ defaults: { run: { shell: "bash -euo pipefail {0}" } }
 
 jobs:
   release:
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-26.04
     steps:
       - uses: kjanat/beepboop/actions/begin@v1
         id: release
@@ -89,7 +89,7 @@ jobs:
       - name: Publish to npmjs.org
         id: npm
         env:
-          "npm_config_//registry.npmjs.org/:_authToken": ${{ fromJSON(steps.npm_credentials.outputs.values)['npm-token'] }}
+          "npm_config_//registry.npmjs.org/:_authToken": ${{ fromJSON(steps.npm_credentials.outputs.values || '{}')['npm-token'] }}
           TARBALL: ${{ steps.package.outputs.tarball }}
           CHANNEL: ${{ steps.v.outputs.channel }}
         run: npm publish "${TARBALL}" --registry=https://registry.npmjs.org --access=public --provenance --tag="${CHANNEL}"
@@ -148,7 +148,8 @@ jobs:
           publications: >-
             [{"id":"pkg:npm/%40kjanat/actions-shells","manager":"npm","name":"@kjanat/actions-shells",
               "version":"${{ fromJSON(steps.release.outputs.context).version }}",
-              "digest":"${{ steps.package.outputs.integrity }}","channel":"${{ steps.v.outputs.channel }}",
+              ${{ steps.package.outputs.integrity && format('"digest":"{0}",', steps.package.outputs.integrity) || '' }}
+              "channel":"${{ steps.v.outputs.channel }}",
               "outcome":"${{ steps.npm.outcome == 'success' && 'succeeded' || 'failed' }}","required":true},
              {"id":"workflow:github-packages","manager":"workflow","name":"github-packages",
               "version":"${{ fromJSON(steps.release.outputs.context).version }}",
