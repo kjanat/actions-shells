@@ -56,4 +56,10 @@ describe.skipIf(!available('bash'))('Bash profile', () => {
 		expect(result.status, result.stderr).toBe(0);
 		expect(result.stdout).toBe('handled');
 	});
+
+	it('accepts long options before short-option overrides', () => {
+		const result = run('bash', 'unset PROFILE_MISSING\nprintf "ok%s" "$PROFILE_MISSING"\n[[ -o posix ]]', ['--posix', '+u']);
+		expect(result.status, result.stderr).toBe(0);
+		expect(result.stdout).toBe('ok');
+	});
 });

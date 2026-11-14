@@ -13,7 +13,14 @@ export const adapters: readonly RuntimeAdapter[] = [
 		title: 'Bash',
 		command: 'bash',
 		input: file(),
-		args: (path, userArgs) => ['--noprofile', '--norc', '-euo', 'pipefail', ...userArgs, path],
+		args: (path, userArgs) => {
+			let end = 0;
+			while (userArgs[end]?.startsWith('--') && userArgs[end] !== '--') {
+				const option = userArgs[end++];
+				if (option === '--rcfile' || option === '--init-file') end++;
+			}
+			return ['--noprofile', '--norc', ...userArgs.slice(0, end), '-euo', 'pipefail', ...userArgs.slice(end), path];
+		},
 		install: 'Bash on the runner, including Git for Windows',
 		notes: 'Enables errexit, nounset and pipefail. Pass +u or +e to opt out; normal Bash conditional rules apply.',
 	},
