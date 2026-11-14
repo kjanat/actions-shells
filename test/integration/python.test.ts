@@ -15,6 +15,16 @@ beforeEach(() => { dir = mkdtempSync(path.join(os.tmpdir(), "actions-shell 'pyth
 afterEach(() => rmSync(dir, { recursive: true, force: true }));
 
 describe.skipIf(!version)('installed Python selection', () => {
+	it.skipIf(process.platform !== 'win32')('finds a versioned Windows executable using PATHEXT', () => {
+		const script = path.join(dir, 'script');
+		writeFileSync(script, 'import sys\nprint("%s.%s" % sys.version_info[:2])');
+		writeFileSync(path.join(dir, `python${version}.CMD`), `@"${executable}" %*\r\n`);
+		const result = spawnSync(process.execPath, [cli, `py${version}`, script], {
+			encoding: 'utf8', env: { ...process.env, PATH: dir, Path: dir, PATHEXT: '.CMD' },
+		});
+		expect(result.status, result.stderr).toBe(0);
+		expect(result.stdout.trim()).toBe(version);
+	});
 	it.each(['python', 'py', `python${version}`, `py${version}`])('runs %s with flags and preserves exits', runtime => {
 		const script = path.join(dir, 'script');
 		const source = 'import sys\nprint("%s.%s" % sys.version_info[:2])\nassert sys.flags.dont_write_bytecode\nraise SystemExit(23)';
