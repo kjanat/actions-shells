@@ -15,7 +15,9 @@ export class RuntimeNotFoundError extends Error {
 		runtime = adapter.name,
 	) {
 		super(
-			`actions-shell: runtime "${runtime}" needs \`${command}\` on PATH, but ${adapter.requiredVersion ? 'no compatible version was found' : 'it was not found'}.`
+			`actions-shell: runtime "${runtime}" needs \`${command}\` on PATH, but ${
+				adapter.requiredVersion ? 'no compatible version was found' : 'it was not found'
+			}.`
 				+ (adapter.install ? `\n  hint: install it with ${adapter.install}` : '')
 				+ `\n  hint: run \`actions-shell doctor ${runtime}\` for details`,
 		);
@@ -42,10 +44,15 @@ export function resolveCommand(
 		if (adapter.requiredVersion) {
 			const plan = planSpawn(resolved, [...extraArgs, ...(adapter.versionArgs ?? ['--version'])]);
 			const probe = spawnSync(plan.file, plan.args, {
-				env, encoding: 'utf8', timeout: 10_000, windowsHide: true,
+				env,
+				encoding: 'utf8',
+				timeout: 10_000,
+				windowsHide: true,
 				windowsVerbatimArguments: plan.windowsVerbatimArguments,
 			});
-			if (probe.status !== 0 || !adapter.requiredVersion.test(`${probe.stdout ?? ''}\n${probe.stderr ?? ''}`.trim())) continue;
+			if (probe.status !== 0 || !adapter.requiredVersion.test(`${probe.stdout ?? ''}\n${probe.stderr ?? ''}`.trim())) {
+				continue;
+			}
 		}
 		return { command: name, resolved, extraArgs };
 	}

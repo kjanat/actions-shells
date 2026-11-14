@@ -1,6 +1,6 @@
-import path from 'node:path';
 import { aliasesFor, allRuntimes, applyEnvOverrides, envKey, resolveRuntime, runtimeNames, splitArgs } from '#registry';
 import { aliases } from '#runtimes';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 describe('registry', () => {

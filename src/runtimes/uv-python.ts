@@ -7,7 +7,8 @@ export const uvPython: RuntimeAdapter = {
 	input: { kind: 'file', extension: '.py' },
 	args: (path, userArgs) => ['run', ...userArgs, path],
 	install: 'astral-sh/setup-uv or mise (uv)',
-	notes: 'Runs Python through uv, including inline script dependencies. Pass --python 3.11 or use uv-python3.11 to select a version; --no-project skips project discovery. Doctor checks uv itself; uv resolves Python when the script runs.',
+	notes:
+		'Runs Python through uv, including inline script dependencies. Pass --python 3.11 or use uv-python3.11 to select a version; --no-project skips project discovery. Doctor checks uv itself; uv resolves Python when the script runs.',
 };
 
 export function versionedUvPython(id: string): RuntimeAdapter | undefined {
@@ -18,6 +19,7 @@ export function versionedUvPython(id: string): RuntimeAdapter | undefined {
 		name: `uv-python${version}`,
 		title: `Python ${version} (uv)`,
 		args: (path, userArgs) => ['run', '--python', version, ...userArgs, path],
-		notes: `Runs Python ${version} through uv, downloading it if necessary. Supports inline script dependencies and uv run flags. Doctor checks uv itself.`,
+		notes:
+			`Runs Python ${version} through uv, downloading it if necessary. Supports inline script dependencies and uv run flags. Doctor checks uv itself.`,
 	};
 }

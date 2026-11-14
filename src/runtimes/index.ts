@@ -1,8 +1,8 @@
-import { python } from '#runtimes/python';
-import { uvPython } from '#runtimes/uv-python';
-import { pwsh } from '#runtimes/pwsh';
 import { cross } from '#runtimes/cross';
+import { pwsh } from '#runtimes/pwsh';
+import { python } from '#runtimes/python';
 import { rustScript } from '#runtimes/rust-script';
+import { uvPython } from '#runtimes/uv-python';
 import type { RuntimeAdapter } from '#types';
 
 const file = (extension?: string) =>

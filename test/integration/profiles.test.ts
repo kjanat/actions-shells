@@ -1,14 +1,16 @@
 import { resolveRuntime } from '#registry';
 import { resolveCommand } from '#run';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 const cli = path.resolve(import.meta.dirname, '../../cli.mjs');
 let dir: string;
-beforeEach(() => { dir = mkdtempSync(path.join(os.tmpdir(), "actions-shell 'profiles ")); });
+beforeEach(() => {
+	dir = mkdtempSync(path.join(os.tmpdir(), "actions-shell 'profiles "));
+});
 afterEach(() => rmSync(dir, { recursive: true, force: true }));
 
 function available(runtime: string): boolean {
@@ -20,7 +22,9 @@ function run(runtime: string, source: string, args: string[] = [], relative = fa
 	const script = path.join(dir, 'script');
 	writeFileSync(script, source);
 	const result = spawnSync(process.execPath, [cli, runtime, ...args, relative ? path.basename(script) : script], {
-		cwd: dir, encoding: 'utf8', timeout: 15_000,
+		cwd: dir,
+		encoding: 'utf8',
+		timeout: 15_000,
 	});
 	expect(result.error).toBeUndefined();
 	expect(readFileSync(script, 'utf8')).toBe(source);
@@ -57,12 +61,14 @@ describe.skipIf(!available('bash'))('Bash profile', () => {
 		expect(result.stdout).toBe('handled');
 	});
 
-	it.each([
-		['-x', []],
-		['-x +u', ['--posix']],
-		['--posix -x', ['+u']],
-		['-o noclobber', ['--posix', '+u']],
-	] as const)('orders environment arguments %s with caller arguments', (extra, args) => {
+	it.each(
+		[
+			['-x', []],
+			['-x +u', ['--posix']],
+			['--posix -x', ['+u']],
+			['-o noclobber', ['--posix', '+u']],
+		] as const,
+	)('orders environment arguments %s with caller arguments', (extra, args) => {
 		const script = path.join(dir, 'script');
 		writeFileSync(script, 'printf "ok"');
 		const env = { ...process.env, ACTIONS_SHELL_BASH_ARGS: extra };
@@ -74,12 +80,14 @@ describe.skipIf(!available('bash'))('Bash profile', () => {
 	});
 
 	it('accepts long options before short-option overrides', () => {
-		const result = run('bash', 'unset PROFILE_MISSING\nprintf "ok%s" "$PROFILE_MISSING"\n[[ -o posix ]]', ['--posix', '+u']);
+		const result = run('bash', 'unset PROFILE_MISSING\nprintf "ok%s" "$PROFILE_MISSING"\n[[ -o posix ]]', [
+			'--posix',
+			'+u',
+		]);
 		expect(result.status, result.stderr).toBe(0);
 		expect(result.stdout).toBe('ok');
 	});
 });
-
 
 describe.skipIf(!available('pwsh'))('PowerShell profile', () => {
 	it('runs a bare filename from the working directory', () => {

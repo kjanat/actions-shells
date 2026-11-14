@@ -1,7 +1,7 @@
 import { resolveRuntime } from '#registry';
 import { resolveCommand } from '#run';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -10,14 +10,18 @@ const cli = path.resolve(import.meta.dirname, '../../cli.mjs');
 const adapter = resolveRuntime('uv-python');
 const available = adapter && resolveCommand(adapter).resolved;
 let dir: string;
-beforeEach(() => { dir = mkdtempSync(path.join(os.tmpdir(), "actions-shell 'uv ")); });
+beforeEach(() => {
+	dir = mkdtempSync(path.join(os.tmpdir(), "actions-shell 'uv "));
+});
 afterEach(() => rmSync(dir, { recursive: true, force: true }));
 
 function run(runtime: string, source: string, args: string[] = []) {
 	const script = path.join(dir, 'script');
 	writeFileSync(script, source);
 	const result = spawnSync(process.execPath, [cli, runtime, ...args, script], {
-		cwd: dir, encoding: 'utf8', timeout: 120_000,
+		cwd: dir,
+		encoding: 'utf8',
+		timeout: 120_000,
 	});
 	expect(result.error).toBeUndefined();
 	expect(readFileSync(script, 'utf8')).toBe(source);
@@ -32,17 +36,22 @@ describe.skipIf(!available)('uv Python', () => {
 		expect(result.stdout.trim()).toBe('ok');
 	});
 
-	it.each([
-		['uv-python3.11', []],
-		['uv', ['--python', '3.11']],
-	] as const)('selects Python through %s', (runtime, args) => {
+	it.each(
+		[
+			['uv-python3.11', []],
+			['uv', ['--python', '3.11']],
+		] as const,
+	)('selects Python through %s', (runtime, args) => {
 		const result = run(runtime, 'import sys\nprint("%s.%s" % sys.version_info[:2])', [...args]);
 		expect(result.status, result.stderr).toBe(0);
 		expect(result.stdout.trim()).toBe('3.11');
 	}, 120_000);
 
 	it('resolves inline dependencies from an extensionless source', () => {
-		const result = run('uv', '# /// script\n# dependencies = ["idna==3.11"]\n# ///\nimport idna\nprint(idna.encode("münich.example").decode())');
+		const result = run(
+			'uv',
+			'# /// script\n# dependencies = ["idna==3.11"]\n# ///\nimport idna\nprint(idna.encode("münich.example").decode())',
+		);
 		expect(result.status, result.stderr).toBe(0);
 		expect(result.stdout.trim()).toBe('xn--mnich-kva.example');
 	}, 120_000);
