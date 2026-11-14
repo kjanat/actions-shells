@@ -1,27 +1,21 @@
-# Inline Rust with Cross
-
-`actions-shell cross --target <triple> {0}` compiles the Rust in a `run:` block and executes it through [Cross](https://github.com/cross-rs/cross). Use it for architecture checks, portability probes, and small smoke tests that would otherwise need their own Cargo project.
-
-## Workflow
-
-The adapter requires a Linux host, Rust installed through rustup, `cross`, `rust-script`, and a working local Docker or Podman engine. GitHub's Ubuntu runners provide Docker. Install the Rust tools before selecting the shell:
+# Rust with Cross
 
 ```yaml
-steps:
-  - uses: actions/checkout@v7
-  - uses: dtolnay/rust-toolchain@stable
-  - uses: taiki-e/install-action@v2
-    with: { tool: "cross@0.2.5,rust-script@0.36.0" }
-  - uses: kjanat/actions-shells@<release-containing-cross>
-    with: { doctor: true, runtimes: cross }
-
-  - shell: actions-shell cross --target aarch64-unknown-linux-gnu {0}
-    run: |
-      assert_eq!(std::env::consts::ARCH, "aarch64");
-      println!("hello from ARM64");
+- shell: actions-shell cross --target aarch64-unknown-linux-gnu {0}
+  run: |
+    assert_eq!(std::env::consts::ARCH, "aarch64");
+    println!("hello from ARM64");
 ```
 
-Replace the action placeholder with a release containing this feature. CI tests `aarch64-unknown-linux-gnu` and `x86_64-unknown-linux-musl` with Cross 0.2.5 and rust-script 0.36.0. Other targets depend on Cross's execution support: a shell step needs a working target runner as well as a compiler.
+This step assumes actions-shells is already set up. See [runtime setup](../README.md#runtime-setup) and the [runtime index](./README.md).
+
+## Prerequisites
+
+Use a Linux host with Rust installed through rustup, `cross`, `rust-script`, and a working local Docker or Podman engine. GitHub's Ubuntu runners provide Docker. Install the tools before selecting this shell.
+
+CI tests `aarch64-unknown-linux-gnu` and `x86_64-unknown-linux-musl` with Cross 0.2.5 and rust-script 0.36.0. Other targets depend on Cross's execution support. A shell step needs a working target runner as well as a compiler. This runtime has no aliases.
+
+## Invocation and flags
 
 The target must appear explicitly before `{0}`. Both `--target triple` and `--target=triple` work. A toolchain selector can appear first, for example `actions-shell cross +stable --target aarch64-unknown-linux-gnu {0}`. Remaining arguments go to `cross run`; `--manifest-path` is managed by the adapter. Each step executes one inline program.
 
@@ -29,7 +23,7 @@ Put program arguments after `--`, keeping `{0}` last: `shell: actions-shell cros
 
 ## Dependencies and files
 
-Cross uses rust-script's package-only mode. Bare statements, a complete `fn main()`, and embedded Cargo manifests work:
+Cross uses rust-script's package-only mode. Bare statements, a complete `fn main()`, and embedded Cargo manifests work. This example assumes the checkout contains a Cargo package at `crates/local_helpers`:
 
 ````yaml
 - shell: actions-shell cross --target aarch64-unknown-linux-gnu {0}
@@ -87,15 +81,3 @@ A failed preparation step prevents execution. Compiler and runtime failures stil
 Cross images and Cargo's download cache remain available for later steps. Provide a persistent `--target-dir` to retain compiled dependencies. Only the adapter's own temporary directory is deleted.
 
 `doctor cross` checks Cross, rust-script, rustup, and container-engine connectivity. The selected image, target libraries, and emulator are exercised when the step runs. The initial support scope is local container engines on Linux hosts; explicit `CROSS_REMOTE` and `CROSS_CONTAINER_IN_CONTAINER` modes are rejected. Mount paths containing a colon are rejected because Docker's volume syntax uses colons as separators.
-
-## Verification
-
-Run the container integration suite explicitly:
-
-```sh
-pnpm build
-ACTIONS_SHELL_TEST_CROSS=1 pnpm exec vitest run test/integration/cross.test.ts
-ACTIONS_SHELL_TEST_CROSS=1 ACTIONS_SHELL_TEST_CROSS_TARGET=x86_64-unknown-linux-musl pnpm exec vitest run test/integration/cross.test.ts
-```
-
-The suite checks target architecture, embedded registry and local dependencies, working-directory access, paths containing spaces and quotes, explicit environment passthrough, all five GitHub command files, exact nonzero exit status, compiler failure, cancellation, and cleanup. Unit tests cover failed package generation, missing prerequisites, argument validation, and retained packages. CI additionally uses the checkout as a real action and reads the output written by a Cross shell step.
