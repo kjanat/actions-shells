@@ -1,5 +1,6 @@
 import { adapters, aliases } from '#runtimes';
 import { versionedPython } from '#runtimes/python';
+import { versionedUvPython } from '#runtimes/uv-python';
 import type { RuntimeAdapter, RuntimeTool } from '#types';
 
 const byName = new Map<string, RuntimeAdapter>(adapters.map((a) => [a.name, a]));
@@ -9,7 +10,7 @@ export const aliasesFor = (name: string): string[] =>
 	Object.entries(aliases).filter(([, target]) => target === name).map(([alias]) => alias).sort();
 export const resolveRuntime = (id: string): RuntimeAdapter | undefined => {
 	const key = id.toLowerCase();
-	return byName.get(key) ?? byName.get(aliases[key] ?? '') ?? versionedPython(key);
+	return byName.get(key) ?? byName.get(aliases[key] ?? '') ?? versionedPython(key) ?? versionedUvPython(key);
 };
 export const allRuntimes = (): readonly RuntimeAdapter[] => adapters;
 

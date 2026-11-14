@@ -74,6 +74,8 @@ That is the whole job. `actions-shells` does **not**:
 | `actions-shell fsharp {0}`                  | `dotnet fsi`                          | mise `dotnet`, or [setup-dotnet@v6](https://github.com/actions/setup-dotnet)            | F# scripts.                                                                                        |
 | `actions-shell python {0}`                  | `python3` / `python`                  | mise `python`, or [setup-python@v7](https://github.com/actions/setup-python)            | GitHub also has a built-in `python` shell.                                                         |
 | `actions-shell py3.11 {0}` | `python3.11` / matching `python3` or `python` | [setup-python@v7](https://github.com/actions/setup-python) with `python-version: "3.11"` | Also `python3.11`; accepts any `3.MINOR` selector and refuses other interpreter versions. |
+| `actions-shell uv-python {0}` | `uv run` | mise `uv`, or [setup-uv](https://github.com/astral-sh/setup-uv) | Alias `uv`; supports inline dependencies, `--with`, `--python 3.11`, and `--no-project`. |
+| `actions-shell uv-python3.11 {0}` | `uv run --python 3.11` | Same as above | Any `3.MINOR` selector; uv can download the requested Python. |
 | `actions-shell ruby {0}`                    | `ruby`                                | [setup-ruby@v1](https://github.com/ruby/setup-ruby), or mise `ruby`                     | setup-ruby provides prebuilt Rubies and Bundler caching.                                           |
 | `actions-shell perl {0}`                    | `perl`                                | [actions-setup-perl@v1](https://github.com/shogo82148/actions-setup-perl)               | Includes Windows support; mise `perl` is another option on supported platforms.                    |
 | `actions-shell php {0}`                     | `php`                                 | [setup-php@v2](https://github.com/shivammathur/setup-php)                               | Handles PHP extensions and configuration. Start the script with `<?php`.                           |
@@ -81,11 +83,27 @@ That is the whole job. `actions-shells` does **not**:
 | `actions-shell julia {0}`                   | `julia`                               | [setup-julia@v3](https://github.com/julia-actions/setup-julia), or mise `julia`         | Julia scripts.                                                                                     |
 | `actions-shell r {0}`                       | `Rscript`                             | [r-lib/actions/setup-r@v2](https://github.com/r-lib/actions/tree/v2/setup-r)            | Use the R community's setup action for R versions and package-repository configuration.            |
 
-Aliases: `rust`→rust-script, `js`/`javascript`→node, `ts`/`typescript`→deno, `cs`→csharp, `fs`→fsharp, `kt`/`kts`→kotlin, `rb`→ruby, `pl`→perl, `jl`→julia, `py`→python, `rscript`→r.
+Aliases: `rust`→rust-script, `js`/`javascript`→node, `ts`/`typescript`→deno, `cs`→csharp, `fs`→fsharp, `kt`/`kts`→kotlin, `rb`→ruby, `pl`→perl, `jl`→julia, `py`→python, `uv`→uv-python, `rscript`→r.
 
 `actions-shell list` prints this table from the binary itself.
 
 [rust-script]: https://rust-script.org
+
+## Python through uv
+
+Pass uv options before `{0}`, or declare dependencies in the script:
+
+```yaml
+- shell: actions-shell uv --python 3.11 {0}
+  run: |
+    # /// script
+    # dependencies = ["idna==3.11"]
+    # ///
+    import idna
+    print(idna.encode("münich.example").decode())
+```
+
+`uv run` uses the current project unless you pass `--no-project`. Inline script metadata gets its own dependency environment. `actions-shell doctor uv` checks uv; Python selection and downloads happen when uv runs the script.
 
 ## Runtime setup
 
