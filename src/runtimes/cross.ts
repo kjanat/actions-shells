@@ -23,13 +23,22 @@ function requirements(env: NodeJS.ProcessEnv): RuntimeTool[] {
 	];
 }
 
-function crossArgs(manifest: string, userArgs: readonly string[]): string[] {
-	const args = [...userArgs];
-	const toolchain = args[0]?.startsWith('+') ? [args.shift() as string] : [];
-	return [...toolchain, 'run', ...args, '--manifest-path', manifest];
+function splitCrossArgs(args: readonly string[]): { options: string[]; program: string[] } {
+	const separator = args.indexOf('--');
+	return {
+		options: args.slice(0, separator < 0 ? args.length : separator),
+		program: separator < 0 ? [] : args.slice(separator),
+	};
 }
 
-function validateArgs(args: readonly string[]): void {
+function crossArgs(manifest: string, userArgs: readonly string[]): string[] {
+	const { options: args, program } = splitCrossArgs(userArgs);
+	const toolchain = args[0]?.startsWith('+') ? [args.shift() as string] : [];
+	return [...toolchain, 'run', ...args, '--manifest-path', manifest, ...program];
+}
+
+function validateArgs(userArgs: readonly string[]): void {
+	const { options: args } = splitCrossArgs(userArgs);
 	let target: string | undefined;
 	for (const [i, arg] of args.entries()) {
 		if (arg === '--manifest-path' || arg.startsWith('--manifest-path=')) {

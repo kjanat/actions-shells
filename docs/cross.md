@@ -25,6 +25,8 @@ Replace the action placeholder with a release containing this feature. CI tests 
 
 The target must appear explicitly before `{0}`. Both `--target triple` and `--target=triple` work. A toolchain selector can appear first, for example `actions-shell cross +stable --target aarch64-unknown-linux-gnu {0}`. Remaining arguments go to `cross run`; `--manifest-path` is managed by the adapter. Each step executes one inline program.
 
+Put program arguments after `--`, keeping `{0}` last: `shell: actions-shell cross --target aarch64-unknown-linux-gnu -- greeting {0}`. The target and other Cargo options must precede `--`. The adapter forwards program arguments unchanged to Cross. Cross 0.2.5 still interprets some options, including `--target` and `--manifest-path`, after the separator; avoid those names in program arguments with that version.
+
 ## Dependencies and files
 
 Cross uses rust-script's package-only mode. Bare statements, a complete `fn main()`, and embedded Cargo manifests work:

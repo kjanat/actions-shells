@@ -26,8 +26,8 @@ describe.skipIf(!enabled)('cross with a real container engine', () => {
 	});
 	afterEach(() => rmSync(dir, { recursive: true, force: true }));
 
-	function run() {
-		return spawnSync(process.execPath, [cli, 'cross', '--target', target, script], {
+	function run(args: string[] = []) {
+		return spawnSync(process.execPath, [cli, 'cross', '--target', target, ...args, script], {
 			cwd: workspace,
 			env,
 			encoding: 'utf8',
@@ -85,6 +85,33 @@ std::process::exit(42);
 		expect(readFileSync(script, 'utf8')).toBe(source);
 		expectClean(result.stderr);
 	}, 300_000);
+
+	it.each([false, true])(
+		'passes program arguments to the inline script (existing Cargo package: %s)',
+		(existingPackage) => {
+			if (existingPackage) {
+				mkdirSync(path.join(workspace, 'src'));
+				writeFileSync(
+					path.join(workspace, 'Cargo.toml'),
+					'[package]\nname = "other"\nversion = "0.1.0"\nedition = "2021"\n',
+				);
+				writeFileSync(path.join(workspace, 'src/main.rs'), 'fn main() { panic!("wrong package"); }');
+			}
+			writeFileSync(
+				script,
+				`fn main() {
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    assert_eq!(args, ["greeting", "two words", "--", "farewell"]);
+    println!("inline arguments received");
+}`,
+			);
+			const result = run(['--', 'greeting', 'two words', '--', 'farewell']);
+			expect(result.status, result.stderr).toBe(0);
+			expect(result.stdout).toContain('inline arguments received');
+			expectClean(result.stderr);
+		},
+		300_000,
+	);
 
 	it('propagates compiler failure and cleans the package', () => {
 		writeFileSync(script, 'fn main() { nonexistent_function(); }');

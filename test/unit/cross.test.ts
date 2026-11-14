@@ -120,12 +120,37 @@ describe.skipIf(process.platform !== 'linux')('cross preparation', () => {
 
 	it.each([
 		[[], 'requires --target'],
+		[['--', '--target=x'], 'requires --target'],
 		[['--target'], 'needs a target triple'],
+		[['--target', '--', 'x'], 'needs a target triple'],
 		[['--target='], 'needs a target triple'],
 		[['--target=x', '--target=y'], 'one --target'],
 		[['--target=x', '--manifest-path=other'], 'manages --manifest-path'],
 	])('rejects invalid adapter arguments %j', (args, error) => {
 		expect(() => buildInvocation({ adapter: cross, scriptPath: script, userArgs: args, env })).toThrow(error);
+	});
+
+	it('keeps Cargo options before the managed manifest and program arguments after the separator', () => {
+		const program = ['--', 'greeting', '--target', 'app-target', '--manifest-path', 'app.toml', '--', ''];
+		const inv = buildInvocation({
+			adapter: cross,
+			scriptPath: script,
+			userArgs: ['+stable', '--release', '--target=x86_64-unknown-linux-musl', ...program],
+			env,
+		});
+		try {
+			expect(inv.run.args.slice(1)).toEqual([
+				'+stable',
+				'run',
+				'--release',
+				'--target=x86_64-unknown-linux-musl',
+				'--manifest-path',
+				inv.preparation?.path,
+				...program,
+			]);
+		} finally {
+			inv.preparation?.cleanup();
+		}
 	});
 
 	it('reports a missing package generator before allocating a package', () => {

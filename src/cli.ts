@@ -161,7 +161,7 @@ for (const adapter of allRuntimes()) {
 const raw = process.argv.slice(2);
 const last = raw.at(-1);
 const argv = raw.length >= 2 && last && !last.startsWith('-')
-	? [raw[0] as string, '--', ...raw.slice(1).filter((t) => t !== '--')]
+	? [raw[0] as string, '--', ...raw.slice(1)]
 	: raw;
 
 await app.run({ adapter: createNodeAdapter({ ...process, argv: [...process.argv.slice(0, 2), ...argv] }) });

@@ -159,6 +159,15 @@ describe('actions-shell <runtime> <file>', () => {
 		expect(r.status).toBe(0);
 	});
 
+	it('preserves runtime separators and the arguments following them', () => {
+		const capture = path.join(dir, 'capture.cjs');
+		writeFileSync(capture, 'console.log(JSON.stringify(process.argv.slice(2)))');
+		const args = ['--', '--help', 'greeting', '--', 'script'];
+		const r = runCli(['node', ...args], { ACTIONS_SHELL_NODE_ARGS: `"${capture}"` });
+		expect(r.status, r.stderr).toBe(0);
+		expect(JSON.parse(r.stdout)).toEqual(args);
+	});
+
 	it('fails clearly for unknown and missing runtimes', () => {
 		expect(runCli(['klingon', 'x']).status).toBe(2);
 		const r = runCli(['julia', 'x'], { PATH: '' });
