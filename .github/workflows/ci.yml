@@ -70,6 +70,7 @@ jobs:
         with:
           mise_toml: |
             [tools]
+            uv = "0.13.7"
             java = "21"
             kotlin = "2.4.21"
             ${{ runner.os != 'Windows' && 'lua = "5.4"' || '' }}
@@ -163,6 +164,17 @@ jobs:
         if: runner.os == 'macOS' # macOS runners ship Swift; no setup action needed
         shell: actions-shell swift {0}
         run: print("swift says hi")
+
+      - name: uv Python with inline dependencies
+        shell: actions-shell uv-python3.11 {0}
+        run: |
+          # /// script
+          # dependencies = ["idna==3.11"]
+          # ///
+          import sys
+          import idna
+          assert sys.version_info[:2] == (3, 11)
+          print(idna.encode("münich.example").decode())
 
       - name: Python version selection
         shell: actions-shell py3.11 {0}

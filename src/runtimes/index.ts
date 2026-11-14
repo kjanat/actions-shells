@@ -1,4 +1,5 @@
 import { python } from '#runtimes/python';
+import { uvPython } from '#runtimes/uv-python';
 import { pwsh } from '#runtimes/pwsh';
 import { cross } from '#runtimes/cross';
 import { rustScript } from '#runtimes/rust-script';
@@ -144,6 +145,7 @@ export const adapters: readonly RuntimeAdapter[] = [
 
 	// Scripting languages
 	python,
+	uvPython,
 	{
 		name: 'ruby',
 		title: 'Ruby',
@@ -211,5 +213,6 @@ export const aliases: Readonly<Record<string, string>> = {
 	pl: 'perl',
 	jl: 'julia',
 	py: 'python',
+	uv: 'uv-python',
 	rscript: 'r',
 };
