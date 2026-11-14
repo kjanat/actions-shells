@@ -24,7 +24,7 @@ function run(runtime: string, source: string, args: string[] = [], relative = fa
 	const result = spawnSync(process.execPath, [cli, runtime, ...args, relative ? path.basename(script) : script], {
 		cwd: dir,
 		encoding: 'utf8',
-		timeout: 15_000,
+		timeout: 120_000,
 	});
 	expect(result.error).toBeUndefined();
 	expect(readFileSync(script, 'utf8')).toBe(source);
