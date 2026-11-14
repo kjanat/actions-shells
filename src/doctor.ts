@@ -56,7 +56,9 @@ function probe(
 	const base = { runtime: adapter.name, command, resolved, ...input };
 	if (!resolved) return { ...base, version: undefined, status: 'missing' };
 
-	const plan = planSpawn(resolved, [...extraArgs, ...(adapter.versionArgs ?? ['--version'])]);
+	const versionArgs = adapter.versionArgs ?? ['--version'];
+	const args = adapter.envArgsAsRuntimeArgs ? [...versionArgs, ...extraArgs] : [...extraArgs, ...versionArgs];
+	const plan = planSpawn(resolved, args);
 	const probe = spawnSync(plan.file, plan.args, {
 		encoding: 'utf8',
 		env,

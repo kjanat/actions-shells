@@ -57,6 +57,22 @@ describe.skipIf(!available('bash'))('Bash profile', () => {
 		expect(result.stdout).toBe('handled');
 	});
 
+	it.each([
+		['-x', []],
+		['-x +u', ['--posix']],
+		['--posix -x', ['+u']],
+		['-o noclobber', ['--posix', '+u']],
+	] as const)('orders environment arguments %s with caller arguments', (extra, args) => {
+		const script = path.join(dir, 'script');
+		writeFileSync(script, 'printf "ok"');
+		const env = { ...process.env, ACTIONS_SHELL_BASH_ARGS: extra };
+		const result = spawnSync(process.execPath, [cli, 'bash', ...args, script], { encoding: 'utf8', env });
+		expect(result.status, result.stderr).toBe(0);
+		expect(result.stdout).toBe('ok');
+		const doctor = spawnSync(process.execPath, [cli, 'doctor', 'bash'], { encoding: 'utf8', env });
+		expect(doctor.status, doctor.stderr).toBe(0);
+	});
+
 	it('accepts long options before short-option overrides', () => {
 		const result = run('bash', 'unset PROFILE_MISSING\nprintf "ok%s" "$PROFILE_MISSING"\n[[ -o posix ]]', ['--posix', '+u']);
 		expect(result.status, result.stderr).toBe(0);
