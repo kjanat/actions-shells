@@ -3,16 +3,35 @@
   "streams": {
     "actions-shells": {
       "packages": [],
-      "versionScope": "none",
-      "mustPublish": [],
-      "workflows": {
-        "release": {
+      "versionScope": "one-for-stream",
+      "versionSource": {
+        "kind": "tags",
+        "prefix": "v"
+      },
+      "mustPublish": [
+        "pkg:npm/%40kjanat/actions-shells",
+        "workflow:github-packages",
+        "workflow:action-release"
+      ],
+      "promote": {
+        "publishWhen": "approved-in-beepboop",
+        "workflow": {
           "file": "release.yml",
-          "mode": "observe",
-          "publications": []
+          "ref": "master",
+          "mode": "dispatch",
+          "publications": [
+            "pkg:npm/%40kjanat/actions-shells",
+            "workflow:github-packages",
+            "workflow:action-release"
+          ]
         }
-      }
+      },
+      "credentials": [
+        "npm-token"
+      ]
     }
   },
-  "managers": ["workflow"]
+  "managers": [
+    "workflow"
+  ]
 }

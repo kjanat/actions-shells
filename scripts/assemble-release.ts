@@ -2,7 +2,7 @@
 /**
  * Assemble the exact tree that a release tag contains:
  *   README.md  LICENSE  action.yml  cli.mjs  setup.mjs
- * Nothing else. Tags are orphan commits of this directory (see .github/workflows/release.yml).
+ * Nothing else. Tags point to distribution commits of this directory (see .github/workflows/release.yml).
  */
 import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync, statSync } from 'node:fs';
 import path from 'node:path';
