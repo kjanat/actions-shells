@@ -20,13 +20,17 @@ on:
 
 permissions: { contents: write, id-token: write, attestations: write, packages: write }
 concurrency: { group: release, cancel-in-progress: false }
+defaults: { run: { shell: "bash -euo pipefail {0}" } }
 
 jobs:
   release:
     runs-on: ubuntu-slim
     steps:
+      - uses: kjanat/beepboop/actions/token@0b976fe4c28e3c6e19552191e3cb2b64ce9e8444 # v1
+        id: beepboop
+        with: { permission-contents: write }
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with: { ref: master, fetch-depth: 0 }
+        with: { ref: master, fetch-depth: 0, token: "${{ steps.beepboop.outputs.token }}" }
       - parallel:
           - uses: kjanat/runner@26ceb1f678c11e79d1846b7aa5f8d61af7ecdf65 # master
           - uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
@@ -35,7 +39,6 @@ jobs:
         id: v
         env: { VERSION: "${{ inputs.version }}", PRERELEASE: "${{ inputs.prerelease }}" }
         run: |
-          set -euo pipefail
           [[ "${VERSION}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(-[0-9A-Za-z.-]+)?$ ]] || { echo "invalid version: ${VERSION}"; exit 1; }
           if git ls-remote --exit-code --tags origin "refs/tags/v${VERSION}" >/dev/null; then
             echo "tag v${VERSION} already exists — release tags are immutable"; exit 1
@@ -76,15 +79,12 @@ jobs:
       - name: Create orphan release commit and tags
         id: tag
         env:
+          "${{ insert }}": ${{ fromJSON(steps.beepboop.outputs.gitId || '{}') }}
           VERSION: ${{ steps.v.outputs.version }}
           MAJOR: ${{ steps.v.outputs.major }}
           MINOR: ${{ steps.v.outputs.minor }}
           PRERELEASE: ${{ steps.v.outputs.prerelease }}
         run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
           # Build a tree from release/ only, using a throwaway index so master's tree is untouched.
           GIT_INDEX_FILE="$(mktemp -u)"
           export GIT_INDEX_FILE
@@ -106,14 +106,13 @@ jobs:
 
       - name: Package
         env: { VERSION: "${{ steps.v.outputs.version }}" }
-        run: |
-          set -euo pipefail
-          tar -C release -czf "actions-shells-v${VERSION}.tgz" README.md LICENSE action.yml cli.mjs setup.mjs
+        run: tar -C release -czf "actions-shells-v${VERSION}.tgz" README.md LICENSE action.yml cli.mjs setup.mjs;
           cp release/SHA256SUMS release/cli.mjs release/setup.mjs .
 
       - name: GitHub Release
         uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
         with:
+          token: ${{ steps.beepboop.outputs.token }}
           tag_name: v${{ steps.v.outputs.version }}
           name: v${{ steps.v.outputs.version }}
           prerelease: ${{ steps.v.outputs.prerelease == 'true' }}
