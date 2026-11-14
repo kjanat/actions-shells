@@ -93,12 +93,18 @@ jobs:
           //! [dependencies]
           //! serde_json = "1"
           //! ```
-          let value: serde_json::Value = serde_json::from_str(r#"{"hello":"world"}"#).unwrap();
-          println!("{value}");
+          fn main() {
+            let value: serde_json::Value = serde_json::from_str(r#"{"hello":"world"}"#).unwrap();
+            println!("{value}");
+          }
 
       - name: cargo -Zscript
         shell: actions-shell cargo-script {0}
         run: |
+          ---cargo
+          [package]
+          edition = "2024"
+          ---
           fn main() {
             println!("cargo script says hi");
           }

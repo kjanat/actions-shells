@@ -26,8 +26,10 @@ jobs:
           //! [dependencies]
           //! serde_json = "1"
           //! ```
-          let value: serde_json::Value = serde_json::from_str(r#"{"hello":"world"}"#).unwrap();
-          println!("{value}");
+          fn main() {
+            let value: serde_json::Value = serde_json::from_str(r#"{"hello":"world"}"#).unwrap();
+            println!("{value}");
+          }
 
       - run: |
           use std::process::Command;

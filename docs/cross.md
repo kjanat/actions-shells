@@ -39,7 +39,9 @@ Cross uses rust-script's package-only mode. Bare statements, a complete `fn main
     //! serde_json = "1"
     //! local_helpers = { path = "./crates/local_helpers" }
     //! ```
-    println!("{}", serde_json::json!({"arch": std::env::consts::ARCH}));
+    fn main() {
+      println!("{}", serde_json::json!({"arch": std::env::consts::ARCH}));
+    }
 ````
 
 Relative Cargo dependency paths resolve from the step's working directory. That directory is mounted at the same absolute path in the container, so runtime file operations such as `std::fs::read_to_string("fixture.json")` work against the checkout. `GITHUB_WORKSPACE` is also mounted and forwarded when present. Cross mounts Cargo path dependencies through its own dependency discovery.
