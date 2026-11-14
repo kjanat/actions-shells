@@ -1,3 +1,4 @@
+import { python } from '#runtimes/python';
 import { pwsh } from '#runtimes/pwsh';
 import { cross } from '#runtimes/cross';
 import { rustScript } from '#runtimes/rust-script';
@@ -142,16 +143,7 @@ export const adapters: readonly RuntimeAdapter[] = [
 	},
 
 	// Scripting languages
-	{
-		name: 'python',
-		title: 'Python',
-		command: 'python3',
-		fallbackCommands: ['python'],
-		input: file(),
-		args: pass,
-		install: 'actions/setup-python',
-		notes: 'GitHub has a built-in `python` shell; this adapter exists for uniformity.',
-	},
+	python,
 	{
 		name: 'ruby',
 		title: 'Ruby',

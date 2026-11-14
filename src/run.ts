@@ -4,7 +4,7 @@ import { applyEnvOverrides } from '#registry';
 import { planSpawn } from '#spawn-args';
 import type { RuntimeAdapter, RuntimePreparation, RuntimeTool, Stage } from '#types';
 import { which } from '#which';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { openSync, rmSync } from 'node:fs';
 import os from 'node:os';
 
@@ -15,7 +15,7 @@ export class RuntimeNotFoundError extends Error {
 		runtime = adapter.name,
 	) {
 		super(
-			`actions-shell: runtime "${runtime}" needs \`${command}\` on PATH, but it was not found.`
+			`actions-shell: runtime "${runtime}" needs \`${command}\` on PATH, but ${adapter.requiredVersion ? 'no compatible version was found' : 'it was not found'}.`
 				+ (adapter.install ? `\n  hint: install it with ${adapter.install}` : '')
 				+ `\n  hint: run \`actions-shell doctor ${runtime}\` for details`,
 		);
@@ -38,7 +38,16 @@ export function resolveCommand(
 	const names = command === adapter.command ? [command, ...(adapter.fallbackCommands ?? [])] : [command];
 	for (const name of names) {
 		const resolved = which(name, env);
-		if (resolved) return { command: name, resolved, extraArgs };
+		if (!resolved) continue;
+		if (adapter.requiredVersion) {
+			const plan = planSpawn(resolved, [...extraArgs, ...(adapter.versionArgs ?? ['--version'])]);
+			const probe = spawnSync(plan.file, plan.args, {
+				env, encoding: 'utf8', timeout: 10_000, windowsHide: true,
+				windowsVerbatimArguments: plan.windowsVerbatimArguments,
+			});
+			if (probe.status !== 0 || !adapter.requiredVersion.test(`${probe.stdout ?? ''}\n${probe.stderr ?? ''}`.trim())) continue;
+		}
+		return { command: name, resolved, extraArgs };
 	}
 	return { command, resolved: undefined, extraArgs };
 }

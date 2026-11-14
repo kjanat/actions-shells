@@ -30,6 +30,16 @@ describe('registry', () => {
 		expect(aliasesFor('bun')).toEqual([]);
 	});
 
+	it('resolves Python minor selectors without accepting partial or malformed versions', () => {
+		for (const id of ['py3.11', 'python3.11', 'Py3.11']) {
+			expect(resolveRuntime(id)?.name).toBe('python3.11');
+		}
+		for (const id of ['py3', 'py3.', 'py3.11.2', 'py3.011', 'py3.11x']) {
+			expect(resolveRuntime(id)).toBeUndefined();
+		}
+		expect(resolveRuntime('py3.11')?.requiredVersion?.test('Python 3.110.1')).toBe(false);
+	});
+
 	it('places the script path last for every file-based adapter', () => {
 		const script = path.resolve('/tmp/script');
 		for (const a of allRuntimes()) {

@@ -21,6 +21,8 @@ export interface RuntimeTool {
 	readonly versionArgs?: readonly string[];
 	/** Let the adapter position environment arguments alongside caller arguments. */
 	readonly envArgsAsRuntimeArgs?: boolean;
+	/** Only accept executables whose version probe output matches this pattern. */
+	readonly requiredVersion?: RegExp;
 	/** Installation hint for diagnostics and describe output. */
 	readonly install?: string;
 }
