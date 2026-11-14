@@ -60,6 +60,8 @@ export function buildInvocation(opts: RunOptions): Invocation {
 	}
 	const { command, resolved, extraArgs } = resolveCommand(adapter, env);
 	if (!resolved) throw new RuntimeNotFoundError(adapter, command);
+	const userArgs = adapter.envArgsAsRuntimeArgs ? [...extraArgs, ...opts.userArgs] : opts.userArgs;
+	const prefix = adapter.envArgsAsRuntimeArgs ? [] : extraArgs;
 	const resolve = (tool: RuntimeTool) => {
 		const result = resolveCommand(tool, env);
 		if (!result.resolved) throw new RuntimeNotFoundError(tool, result.command, adapter.name);
@@ -70,9 +72,9 @@ export function buildInvocation(opts: RunOptions): Invocation {
 	if (adapter.prepare) {
 		let preparation: RuntimePreparation | undefined;
 		try {
-			preparation = adapter.prepare(prepared.path, opts.userArgs, { env, resolve });
+			preparation = adapter.prepare(prepared.path, userArgs, { env, resolve });
 			return {
-				run: { executable: resolved, args: [...extraArgs, ...adapter.args(preparation.path, opts.userArgs)] },
+				run: { executable: resolved, args: [...prefix, ...adapter.args(preparation.path, userArgs)] },
 				prepared,
 				preparation,
 			};
@@ -83,14 +85,14 @@ export function buildInvocation(opts: RunOptions): Invocation {
 		}
 	}
 	if (adapter.compile) {
-		const c = adapter.compile(prepared.path, opts.userArgs);
+		const c = adapter.compile(prepared.path, userArgs);
 		return {
-			compile: { executable: resolved, args: [...extraArgs, ...c.args], output: c.output },
+			compile: { executable: resolved, args: [...prefix, ...c.args], output: c.output },
 			run: { executable: c.output, args: adapter.args(c.output, []).filter((a) => a !== c.output) },
 			prepared,
 		};
 	}
-	const args = [...extraArgs, ...adapter.args(prepared.path, opts.userArgs)];
+	const args = [...prefix, ...adapter.args(prepared.path, userArgs)];
 	return { run: { executable: resolved, args }, prepared };
 }
 

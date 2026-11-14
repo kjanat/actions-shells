@@ -8,6 +8,40 @@ const file = (extension?: string) =>
 const pass = (path: string, userArgs: readonly string[]) => [...userArgs, path];
 
 export const adapters: readonly RuntimeAdapter[] = [
+	{
+		name: 'bash',
+		title: 'Bash',
+		command: 'bash',
+		envArgsAsRuntimeArgs: true,
+		input: file(),
+		args: (path, userArgs) => {
+			const long: string[] = [];
+			const short: string[] = [];
+			let end = 0;
+			while (end < userArgs.length) {
+				const option = userArgs[end];
+				if (!option || option === '--' || !/^[+-]/.test(option)) break;
+				end++;
+				if (option.startsWith('--')) {
+					long.push(option);
+					if (option === '--rcfile' || option === '--init-file') {
+						const value = userArgs[end++];
+						if (value !== undefined) long.push(value);
+					}
+				} else {
+					short.push(option);
+					if (option.includes('c')) break;
+					if (/[oO]$/.test(option)) {
+						const value = userArgs[end++];
+						if (value !== undefined) short.push(value);
+					}
+				}
+			}
+			return ['--noprofile', '--norc', ...long, '-euo', 'pipefail', ...short, ...userArgs.slice(end), path];
+		},
+		install: 'Bash on the runner, including Git for Windows',
+		notes: 'Enables errexit, nounset and pipefail. Pass +u or +e to opt out; normal Bash conditional rules apply.',
+	},
 	// JavaScript family
 	{
 		name: 'node',

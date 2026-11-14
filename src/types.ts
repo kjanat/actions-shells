@@ -19,6 +19,8 @@ export interface RuntimeTool {
 	readonly fallbackCommands?: readonly string[];
 	/** Arguments for doctor's readiness probe. Defaults to `["--version"]`. */
 	readonly versionArgs?: readonly string[];
+	/** Let the adapter position environment arguments alongside caller arguments. */
+	readonly envArgsAsRuntimeArgs?: boolean;
 	/** Installation hint for diagnostics and describe output. */
 	readonly install?: string;
 }
