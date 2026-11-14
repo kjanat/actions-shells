@@ -1,3 +1,5 @@
+import { cross } from '#runtimes/cross';
+import { rustScript } from '#runtimes/rust-script';
 import type { RuntimeAdapter } from '#types';
 
 const file = (extension?: string) =>
@@ -36,16 +38,8 @@ export const adapters: readonly RuntimeAdapter[] = [
 	},
 
 	// Rust
-	{
-		name: 'rust-script',
-		title: 'Rust (rust-script)',
-		command: 'rust-script',
-		input: file(),
-		args: pass,
-		install: 'dtolnay/rust-toolchain + `cargo install rust-script`',
-		notes: 'Bare statements, `fn main()`, and embedded `//! ```cargo` manifests are all accepted. '
-			+ 'Compiled artifacts are cached by rust-script.',
-	},
+	rustScript,
+	cross,
 	{
 		name: 'cargo-script',
 		title: 'Rust (cargo -Zscript)',
@@ -80,7 +74,7 @@ export const adapters: readonly RuntimeAdapter[] = [
 		input: file('.main.kts'),
 		args: (path, userArgs) => ['-script', ...userArgs, path],
 		versionArgs: ['-version'],
-		install: 'fwilhe2/setup-kotlin',
+		install: 'jdx/mise-action (java + kotlin)',
 		notes: 'Uses `.main.kts`, so `@file:DependsOn` and `@file:Repository` work.',
 	},
 	{
@@ -89,7 +83,7 @@ export const adapters: readonly RuntimeAdapter[] = [
 		command: 'swift',
 		input: file('.swift'),
 		args: pass,
-		install: 'swift-actions/setup-swift',
+		install: 'Swift on a macOS runner, or jdx/mise-action (swift)',
 		notes: 'Top-level code is allowed; no `main` needed.',
 	},
 	{
@@ -153,7 +147,7 @@ export const adapters: readonly RuntimeAdapter[] = [
 		input: file(),
 		args: pass,
 		versionArgs: ['-v'],
-		install: 'leafo/gh-actions-lua',
+		install: 'jdx/mise-action (lua)',
 	},
 	{
 		name: 'julia',

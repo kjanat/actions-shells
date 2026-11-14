@@ -1,5 +1,5 @@
 import { adapters, aliases } from '#runtimes';
-import type { RuntimeAdapter } from '#types';
+import type { RuntimeAdapter, RuntimeTool } from '#types';
 
 const byName = new Map<string, RuntimeAdapter>(adapters.map((a) => [a.name, a]));
 
@@ -22,7 +22,7 @@ export interface ResolvedInvocation {
 
 /** Apply environment overrides for a runtime. */
 export function applyEnvOverrides(
-	adapter: RuntimeAdapter,
+	adapter: RuntimeTool,
 	env: NodeJS.ProcessEnv = process.env,
 ): ResolvedInvocation {
 	const key = envKey(adapter.name);

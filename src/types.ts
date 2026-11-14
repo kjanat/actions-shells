@@ -6,10 +6,10 @@
  *   (hardlink, falling back to copy) and passed instead.
  * - `stdin`: the file is streamed to the runtime's stdin.
  */
-export type InputSpec = { kind: 'file'; extension?: string } | { kind: 'stdin' };
+export type InputSpec = { kind: 'file'; extension?: string; description?: string } | { kind: 'stdin' };
 
-export interface RuntimeAdapter {
-	/** Canonical id used on the command line: `actions-shell <name> {0}`. */
+export interface RuntimeTool {
+	/** Tool id used in diagnostics and executable overrides. */
 	readonly name: string;
 	/** Human-readable language / tool name for `list` and `describe`. */
 	readonly title: string;
@@ -17,7 +17,40 @@ export interface RuntimeAdapter {
 	readonly command: string;
 	/** Alternative executables tried, in order, when `command` is not on PATH. */
 	readonly fallbackCommands?: readonly string[];
+	/** Arguments for doctor's readiness probe. Defaults to `["--version"]`. */
+	readonly versionArgs?: readonly string[];
+	/** Installation hint for diagnostics and describe output. */
+	readonly install?: string;
+}
+
+export interface Stage {
+	executable: string;
+	args: string[];
+	stdout?: 'ignore';
+}
+
+export interface RuntimePreparation {
+	path: string;
+	stages: readonly Stage[];
+	env: NodeJS.ProcessEnv;
+	/** Stop external resources as well as the command's process group on cancellation. */
+	onSignal?(signal: NodeJS.Signals): void;
+	cleanup(): void;
+}
+
+export interface PreparationContext {
+	env: NodeJS.ProcessEnv;
+	resolve(tool: RuntimeTool): { executable: string; extraArgs: string[] };
+}
+
+export interface RuntimeAdapter extends RuntimeTool {
 	readonly input: InputSpec;
+	readonly platforms?: readonly NodeJS.Platform[];
+	readonly exampleArgs?: readonly string[];
+	/** Tools checked by doctor and resolved before preparing input. */
+	requirements?(env: NodeJS.ProcessEnv): readonly RuntimeTool[];
+	/** Prepare input and commands that must succeed before the runtime starts. */
+	prepare?(path: string, userArgs: readonly string[], context: PreparationContext): RuntimePreparation;
 	/**
 	 * Build the argv (excluding argv[0]).
 	 * `path` is the prepared script path, or `"-"` for stdin runtimes.
@@ -32,10 +65,6 @@ export interface RuntimeAdapter {
 	 * consumed by the compile step).
 	 */
 	compile?(path: string, userArgs: readonly string[]): { args: string[]; output: string };
-	/** Arguments used by `doctor` to probe the version. Defaults to `["--version"]`. */
-	readonly versionArgs?: readonly string[];
-	/** Suggested way to get the runtime onto a runner, shown in errors and `describe`. */
-	readonly install?: string;
 	/** Free-form caveats shown by `describe`. */
 	readonly notes?: string;
 }

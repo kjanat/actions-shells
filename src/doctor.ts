@@ -1,9 +1,14 @@
 import { resolveCommand } from '#run';
 import { planSpawn } from '#spawn-args';
-import type { RuntimeAdapter } from '#types';
+import type { RuntimeAdapter, RuntimeTool } from '#types';
 import { spawnSync } from 'node:child_process';
 
-export type DoctorStatus = 'ready' | 'missing' | 'version-check-failed';
+export type DoctorStatus =
+	| 'ready'
+	| 'missing'
+	| 'version-check-failed'
+	| 'prerequisite-check-failed'
+	| 'unsupported-platform';
 
 export interface DoctorReport {
 	runtime: string;
@@ -13,12 +18,14 @@ export interface DoctorReport {
 	extension: string;
 	version: string | undefined;
 	status: DoctorStatus;
+	requirements?: DoctorReport[];
 }
 
 export function describeInput(adapter: RuntimeAdapter): { input: string; extension: string } {
 	if (adapter.input.kind === 'stdin') return { input: 'stdin', extension: 'n/a' };
 	return {
-		input: adapter.input.extension ? `temporary ${adapter.input.extension} file` : 'file',
+		input: adapter.input.description
+			?? (adapter.input.extension ? `temporary ${adapter.input.extension} file` : 'file'),
 		extension: adapter.input.extension ?? 'none',
 	};
 }
@@ -27,9 +34,26 @@ export function doctor(
 	adapter: RuntimeAdapter,
 	env: NodeJS.ProcessEnv = process.env,
 ): DoctorReport {
+	const report = probe(adapter, env, describeInput(adapter));
+	if (adapter.platforms && !adapter.platforms.includes(process.platform)) {
+		return { ...report, status: 'unsupported-platform' };
+	}
+	if (report.status !== 'ready' || !adapter.requirements) return report;
+	const requirements = adapter.requirements(env).map((tool) => probe(tool, env));
+	return {
+		...report,
+		requirements,
+		status: requirements.every((r) => r.status === 'ready') ? 'ready' : 'prerequisite-check-failed',
+	};
+}
+
+function probe(
+	adapter: RuntimeTool,
+	env: NodeJS.ProcessEnv,
+	input = { input: 'n/a', extension: 'n/a' },
+): DoctorReport {
 	const { command, resolved, extraArgs } = resolveCommand(adapter, env);
-	const { input, extension } = describeInput(adapter);
-	const base = { runtime: adapter.name, command, resolved, input, extension };
+	const base = { runtime: adapter.name, command, resolved, ...input };
 	if (!resolved) return { ...base, version: undefined, status: 'missing' };
 
 	const plan = planSpawn(resolved, [...extraArgs, ...(adapter.versionArgs ?? ['--version'])]);
@@ -57,5 +81,9 @@ export function formatReport(r: DoctorReport): string {
 		['status', r.status],
 	];
 	const width = Math.max(...rows.map(([k]) => k.length)) + 1;
-	return rows.map(([k, v]) => `${`${k}:`.padEnd(width + 1)}${v}`).join('\n');
+	const text = rows.map(([k, v]) => `${`${k}:`.padEnd(width + 1)}${v}`).join('\n');
+	const requirements = r.requirements?.map((tool) =>
+		`  ${tool.runtime}: ${tool.status} (${tool.resolved ?? tool.command})`
+	).join('\n');
+	return requirements ? `${text}\nrequirements:\n${requirements}` : text;
 }

@@ -38,13 +38,14 @@ function runtimeOrThrow(id: string): RuntimeAdapter {
 }
 
 const runtimeArg = arg.string().variadic().describe('Runtime arguments, script path last');
+const exampleArgs = (adapter: RuntimeAdapter) => adapter.exampleArgs?.length ? `${adapter.exampleArgs.join(' ')} ` : '';
 
 const runCommand = (id: string, adapter: RuntimeAdapter) =>
 	command(id)
 		.description(adapter.title)
 		.arg('args', runtimeArg)
-		.example((m) => `shell: ${m.name} ${id} {0}`, 'GitHub Actions step')
-		.example((m) => `${m.name} ${id} ./script`, 'Anywhere else')
+		.example((m) => `shell: ${m.name} ${exampleArgs(adapter)}{0}`, 'GitHub Actions step')
+		.example((m) => `${m.name} ${exampleArgs(adapter)}./script`, 'Anywhere else')
 		.action(async ({ args, out }) => {
 			const scriptPath = args.args.at(-1);
 			if (!scriptPath) {
@@ -82,7 +83,7 @@ const describe = command('describe')
 		const adapter = runtimeOrThrow(args.runtime);
 		const { input, extension } = describeInput(adapter);
 		const key = envKey(adapter.name);
-		const example = adapter.args('{0}', []).join(' ');
+		const example = adapter.args('{0}', adapter.exampleArgs ?? []).join(' ');
 		if (out.jsonMode) {
 			out.json({
 				runtime: adapter.name,
@@ -109,7 +110,7 @@ const describe = command('describe')
 			`input:              ${input}`,
 			`extension required: ${extension}`,
 			`invocation:         ${adapter.command} ${example}`,
-			`workflow:           shell: actions-shell ${adapter.name} {0}`,
+			`workflow:           shell: actions-shell ${adapter.name} ${exampleArgs(adapter)}{0}`,
 			`env overrides:      ACTIONS_SHELL_${key}_COMMAND, ACTIONS_SHELL_${key}_ARGS`,
 		];
 		if (adapter.install) lines.push(`install:            ${adapter.install}`);
@@ -159,8 +160,11 @@ for (const adapter of allRuntimes()) {
 
 const raw = process.argv.slice(2);
 const last = raw.at(-1);
+const runtimeArgs = resolveRuntime(raw[0] ?? '')?.name === 'cross'
+	? raw.slice(1)
+	: raw.slice(1).filter((arg) => arg !== '--');
 const argv = raw.length >= 2 && last && !last.startsWith('-')
-	? [raw[0] as string, '--', ...raw.slice(1).filter((t) => t !== '--')]
+	? [raw[0] as string, '--', ...runtimeArgs]
 	: raw;
 
 await app.run({ adapter: createNodeAdapter({ ...process, argv: [...process.argv.slice(0, 2), ...argv] }) });

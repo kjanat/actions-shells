@@ -1,6 +1,6 @@
 import { planSpawn } from '#spawn-args';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -12,11 +12,14 @@ describe('setup action', () => {
 	it('writes shims, adds to GITHUB_PATH and works end-to-end', () => {
 		const dir = mkdtempSync(path.join(os.tmpdir(), 'actions-shell-setup-'));
 		try {
+			const setup = path.join(dir, 'setup.mjs');
+			copyFileSync(SETUP, setup);
+			copyFileSync(path.join(ROOT, 'cli.mjs'), path.join(dir, 'cli.mjs'));
 			const ghPath = path.join(dir, 'github_path');
 			const ghEnv = path.join(dir, 'github_env');
 			const ghOut = path.join(dir, 'github_output');
 			for (const f of [ghPath, ghEnv, ghOut]) writeFileSync(f, '');
-			const r = spawnSync(process.execPath, [SETUP], {
+			const r = spawnSync(process.execPath, [setup], {
 				encoding: 'utf8',
 				env: {
 					...process.env,
@@ -53,6 +56,9 @@ describe('setup action', () => {
 			});
 			expect(s.stdout.trim(), s.stderr).toBe('via shim');
 			expect(s.status).toBe(0);
+			const help = spawnSync(process.execPath, [path.join(dir, 'cli.mjs'), '--help', '--json'], { encoding: 'utf8' });
+			expect(help.status, help.stderr).toBe(0);
+			expect(JSON.parse(help.stdout)).toHaveProperty('schemaVersion');
 		} finally {
 			rmSync(dir, { recursive: true, force: true });
 		}
