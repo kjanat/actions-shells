@@ -29,9 +29,8 @@ jobs:
         with: { ref: master, fetch-depth: 0 }
       - parallel:
           - uses: kjanat/runner@26ceb1f678c11e79d1846b7aa5f8d61af7ecdf65 # master
-          - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with: { node-version: 26.13.1, cache: pnpm }
+          - uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
+            with: { cache: true, install: false }
       - name: Validate version
         id: v
         env: { VERSION: "${{ inputs.version }}", PRERELEASE: "${{ inputs.prerelease }}" }

@@ -15,13 +15,12 @@ jobs:
     steps:
       - uses: &Checkout actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - parallel: &PnpmRunner
-          - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+          - uses: &Pnpm pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
+            with: { cache: true, install: false }
           - uses: kjanat/runner@26ceb1f678c11e79d1846b7aa5f8d61af7ecdf65 # master
-      - uses: &Node actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with: &PnpmCache { node-version: 26.13.1, cache: pnpm }
       - run: runner i -pf lint typecheck build test:unit release:assemble
-      - uses: *Node
-        with: { node-version: 24 }
+      - uses: *Pnpm
+        with: { runtime: node@24, install: false }
       - name: verify standalone bundles on the action's Node 24 runtime
         run: node node_modules/vitest/vitest.mjs run test/integration/setup.test.ts
 
@@ -33,7 +32,6 @@ jobs:
     steps:
       - uses: *Checkout
       - parallel: *PnpmRunner
-      - { uses: *Node, with: *PnpmCache }
       - run: runner i -f build
 
       # runtimes (this action does not install any of these on purpose)
@@ -210,7 +208,6 @@ jobs:
     steps:
       - uses: *Checkout
       - parallel: *PnpmRunner
-      - { uses: *Node, with: *PnpmCache }
       - { run: runner i -f build, shell: bash }
       - uses: *RustStable
       - uses: *TaikiE
@@ -236,7 +233,6 @@ jobs:
     steps:
       - uses: *Checkout
       - parallel: *PnpmRunner
-      - { uses: *Node, with: *PnpmCache }
       - run: runner i -f build
       - uses: *RustStable
       - uses: *TaikiE
